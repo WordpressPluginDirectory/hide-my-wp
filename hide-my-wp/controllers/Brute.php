@@ -19,6 +19,7 @@ class HMWP_Controllers_Brute extends HMWP_Classes_FrontController
 
 	    add_filter('authenticate', array($this, 'hmwp_check_preauth'), 99, 1);
 	    add_action('admin_init', array($this, 'hmwp_update_trusted_headers'), 99);
+        add_shortcode('hmwp_bruteforce', array($this, 'hmwp_bruteforce_shortcode') );
 
 	    if(HMWP_Classes_Tools::getOption('hmwp_bruteforce_register')) {
 		    add_filter('registration_errors', array($this, 'hmwp_check_registration'), 99, 3);
@@ -86,6 +87,32 @@ class HMWP_Controllers_Brute extends HMWP_Classes_FrontController
                 );
             }
         }
+    }
+
+    /**
+     * Get the brute force using shortcode
+     * @param $atts
+     * @param $content
+     *
+     * @return string|void
+     */
+    public function hmwp_bruteforce_shortcode( $atts = array(), $content = '' ){
+        global $hmwp_bruteforce;
+
+        if (function_exists('is_user_logged_in') && is_user_logged_in()) {
+            return;
+        }
+
+        $hmwp_bruteforce = true;
+
+        if (HMWP_Classes_Tools::getOption('brute_use_math')) {
+            return $this->model->brute_math_form();
+        }elseif (HMWP_Classes_Tools::getOption('brute_use_captcha')) {
+            return $this->model->brute_recaptcha_head() . $this->model->brute_recaptcha_form();
+        }elseif (HMWP_Classes_Tools::getOption('brute_use_captcha_v3')) {
+            return $this->model->brute_recaptcha_head_v3() . $this->model->brute_recaptcha_form_v3();
+        }
+
     }
 
     /**
