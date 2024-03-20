@@ -1899,12 +1899,10 @@ class HMWP_Models_Rewrite
                 }
             } else {
 
-
                 //Hide the param rest route
                 if (HMWP_Classes_Tools::getOption('hmwp_disable_rest_api_param') ) {
                     $this->hideRestRouteParam();
                 }
-
 
                 //Check the whitelist IPs for accessing the hide paths
                 if (HMWP_Classes_Tools::getOption('hmwp_detectors_block') ) {
@@ -1981,7 +1979,7 @@ class HMWP_Models_Rewrite
 		                        site_url('wp-login', 'relative'),
 	                        );
 
-	                        if (!HMWP_Classes_Tools::isCloudPanel() && !HMWP_Classes_Tools::isWpengine() && HMWP_Classes_Tools::getOption('hmwp_hide_login')) {
+	                        if (!HMWP_Classes_Tools::isCloudPanel() && !HMWP_Classes_Tools::isWpengine() && $_SERVER['REQUEST_METHOD'] <> 'POST' && HMWP_Classes_Tools::getOption('hmwp_hide_login')) {
 
 		                        $paths[] = home_url('login', 'relative');
 		                        $paths[] = site_url('login', 'relative');
