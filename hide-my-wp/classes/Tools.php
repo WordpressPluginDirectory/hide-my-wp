@@ -126,7 +126,7 @@ class HMWP_Classes_Tools
         $plugin_relative_url = trim(preg_replace('/' . str_replace('/', '\/', $homepath) . '/', '', $pluginurl, 1), '/');
         $content_relative_url = trim(preg_replace('/' . str_replace('/', '\/', $homepath) . '/', '', $contenturl, 1), '/');
 
-        if ($safe ) {
+        if ($safe) {
             $keymeta = HMWP_OPTION_SAFE;
         }
 
@@ -275,8 +275,8 @@ class HMWP_Classes_Tools
             'hmwp_mapping_file' => 0,
             'hmwp_text_mapping' => json_encode(
                 array(
-                    'from' => array('wp-caption'),
-                    'to' => array('caption'),
+                    'from' => array(),
+                    'to' => array(),
                 )
             ),
             'hmwp_cdn_urls' => json_encode(array()),
@@ -347,6 +347,7 @@ class HMWP_Classes_Tools
 
             //--secure headers
             'hmwp_sqlinjection' => 0,
+            'hmwp_sqlinjection_location' => 'onload',
             'hmwp_sqlinjection_level' => 1,
             'hmwp_security_header' => 0,
             'hmwp_hide_unsafe_headers' => 0,
@@ -406,10 +407,11 @@ class HMWP_Classes_Tools
             'hmwp_disable_xmlrpc' => 1,
             'hmwp_hide_rsd' => 1,
             //
-            'hmwp_sqlinjection' => 0,
+            'hmwp_sqlinjection' => 1,
+            'hmwp_sqlinjection_level' => 1,
             'hmwp_security_header' => 1,
             'hmwp_hide_unsafe_headers' => 1,
-            'hmwp_detectors_block' => 0,
+            'hmwp_detectors_block' => 1,
 
             //PRO
             'hmwp_hide_styleids' => 0,
@@ -1299,6 +1301,21 @@ class HMWP_Classes_Tools
         return (isset($_SERVER['WPENGINE_PHPSESSIONS']));
     }
 
+    /**
+     * Returns true if server is Local by Flywheel
+     *
+     * @return boolean
+     */
+    public static function isLocalFlywheel()
+    {
+
+        //If custom defined
+        if (HMWP_Classes_Tools::getOption('hmwp_server_type') <> 'auto' ) {
+            return (HMWP_Classes_Tools::getOption('hmwp_server_type') == 'local');
+        }
+
+        return false;
+    }
 
     /**
      * Returns true if server is Wpengine
@@ -2340,8 +2357,13 @@ class HMWP_Classes_Tools
         $bl_items = array();
 
         $bl_blacklisted = array(
-            '35.214.130.0/22',
-            '54.86.50.0/22',
+            '35.214.130.0/22', // detector
+            '54.86.50.0/22', // detector
+            '172.105.48.0/22', // detector
+            '15.235.50.223', // detector
+            '192.185.4.40', // detector
+            '172.105.48.130', // detector
+            '167.99.233.123', // detector
         );
 
         if (HMWP_Classes_Tools::getOption('banlist_ip')) {
