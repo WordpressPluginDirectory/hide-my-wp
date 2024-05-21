@@ -801,25 +801,21 @@ class HMWP_Models_Rewrite
 
 	        $rewritecode = '';
 
-	        //Add the URL Mapping rules
-	        if (!empty($this->_umrewrites)) {
-		        foreach ( $this->_umrewrites as $rewrite ) {
-			        $rewritecode .= 'Source: <strong>^' . str_replace(array('.css', '.js'), array('\.css', '\.js'), $rewrite['from']) . '</strong> Destination: <strong>' . $rewrite['to'] . "</strong> Rewrite type: 301 Permanent;<br />";
-		        }
-	        }
+            //Add the URL Mapping rules
+            if (!empty($this->_umrewrites)) {
+                foreach ( $this->_umrewrites as $rewrite ) {
+                    $rewritecode .= 'Source: <strong>^' . str_replace(array('.css', '.js'), array('\.css', '\.js'), $rewrite['from']) . '</strong> Destination: <strong>' . $rewrite['to'] . "</strong> Rewrite type: <strong>301 Permanent</strong>;<br />";
+                }
+            }
 
-	        //Add the New Paths rules
-	        if (!empty($this->_rewrites) ) {
-		        foreach ( $this->_rewrites as $rewrite ) {
-			        if(PHP_VERSION_ID >= 70400 ){
-				        $rewritecode .= 'Source: <strong>^/' . str_replace(array('.css', '.js'), array('\.css', '\.js'), $rewrite['from']) . '</strong> Destination: <strong>' . $rewrite['to'] . "</strong> Rewrite type: Break;<br />";
-			        }elseif (strpos($rewrite['to'], 'index.php') === false && (strpos($rewrite['to'], HMWP_Classes_Tools::$default['hmwp_wp-content_url']) !== false || strpos($rewrite['to'], HMWP_Classes_Tools::$default['hmwp_wp-includes_url']) !== false)) {
-				        if (strpos($rewrite['to'], HMWP_Classes_Tools::$default['hmwp_login_url']) === false && strpos($rewrite['to'], HMWP_Classes_Tools::$default['hmwp_admin_url']) === false ) {
-					        $rewritecode .= 'Source: <strong>^/' . str_replace(array('.css', '.js'), array('\.css', '\.js'), $rewrite['from']) . '</strong> Destination: <strong>' . $rewrite['to'] . "</strong> Rewrite type: Break;<br />";
-				        }
-			        }
-		        }
-	        }
+            //Add the New Paths rules
+            if (!empty($this->_rewrites) ) {
+                foreach ( $this->_rewrites as $rewrite ) {
+                    if (strpos($rewrite['to'], 'wp-login.php') === false) {
+                        $rewritecode .= 'Source: <strong>^/' . str_replace(array('.css', '.js'), array('\.css', '\.js'), $rewrite['from']) . '</strong> Destination: <strong>' . $rewrite['to'] . "</strong> Rewrite type: <strong>Break</strong>;<br />";
+                    }
+                }
+            }
 
             if ($rewritecode <> '' ) {
                 HMWP_Classes_Error::setNotification(sprintf(esc_html__('WpEngine detected. Add the redirects in the WpEngine Redirect rules panel %s.', 'hide-my-wp'), '<strong><a href="https://wpengine.com/support/redirect/" target="_blank" style="color: red">' . esc_html__("Learn How To Add the Code", 'hide-my-wp') . '</a></strong> <br /><br /><pre>' . $rewritecode . '</pre>' . $form),'notice',false);
@@ -1513,21 +1509,23 @@ class HMWP_Models_Rewrite
         do_action('hmwp_login_init');
     }
 
-	/**
-	 * Hook the login page and check if the user is already logged in
-	 *
-	 * @return string
-	 */
-	public function dashboard_redirect()
-	{
-		global $current_user;
-		//If the user is already logged in
-		if ((!isset( $_REQUEST['action'] ) || $_REQUEST['action'] == 'login') && isset($current_user->ID) && $current_user->ID > 0) {
-			//redirect to admin dashboard
-			wp_redirect(apply_filters('hmwp_url_login_redirect', admin_url()));
-			exit();
-		}
-	}
+    /**
+     * Hook the login page and check if the user is already logged in
+     *
+     * @return void
+     */
+    public function dashboard_redirect()
+    {
+        global $current_user;
+        //If the user is already logged in
+        if (!HMWP_Classes_Tools::getValue('nordt') &&
+            (!isset( $_REQUEST['action'] ) || $_REQUEST['action'] == 'login') &&
+            isset($current_user->ID) && $current_user->ID > 0) {
+            //redirect to admin dashboard
+            wp_redirect(apply_filters('hmwp_url_login_redirect', admin_url()));
+            exit();
+        }
+    }
 
     /**
      * Change the password confirm URL with the new URL
@@ -1931,11 +1929,6 @@ class HMWP_Models_Rewrite
                 //Hide the param rest route
                 if (HMWP_Classes_Tools::getOption('hmwp_disable_rest_api_param') ) {
                     $this->hideRestRouteParam();
-                }
-
-                //Check the whitelist IPs for accessing the hide paths
-                if (HMWP_Classes_Tools::getOption('hmwp_detectors_block') ) {
-                    HMWP_Classes_ObjController::getClass('HMWP_Models_Compatibility')->checkBlacklistIPs();
                 }
 
                 //if is set to hide the urls or not logged in
