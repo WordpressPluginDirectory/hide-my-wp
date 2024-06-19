@@ -310,6 +310,7 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController
                 'warning' => false,
                 'message' => __("Security keys are used to ensure better encryption of information stored in the user's cookies and hashed passwords. <br /><br />These make your site more difficult to hack, access and crack by adding random elements to the password. You don't have to remember these keys. In fact, once you set them you'll never see them again. Therefore, there's no excuse for not setting them properly.", 'hide-my-wp'),
                 'solution' => __("Security keys are defined in wp-config.php as constants on lines. They should be as unique and as long as possible. <code>AUTH_KEY,SECURE_AUTH_KEY,LOGGED_IN_KEY,NONCE_KEY,AUTH_SALT,SECURE_AUTH_SALT,LOGGED_IN_SALT,NONCE_SALT</code>", 'hide-my-wp'),
+                'javascript' => "pro",
             ),
             'checkSaltKeysAge' => array(
                 'name' => esc_html__("Security Keys Updated", 'hide-my-wp'),
@@ -509,14 +510,14 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController
                 'solution' => sprintf(esc_html__("Switch on %s %s > Change Paths > Hide RSD Endpoint%s", 'hide-my-wp'), '<a href="'.HMWP_Classes_Tools::getSettingsUrl('hmwp_permalinks#tab=api').'" >', HMWP_Classes_Tools::getOption('hmwp_plugin_menu'), '</a>'),
                 'javascript' => "pro",
             ),
-            'checkMysqlPermissions' => array(
-                'name' => esc_html__("MySql Grant All Permissions", 'hide-my-wp'),
-                'value' => false,
-                'valid' => false,
-                'warning' => false,
-                'message' => __("If an attacker gains access to your wp-config.php file and gets the MySQL username and password, he'll be able to login to that database and do whatever that account allows. <br /><br />That's why it's important to keep the account's privileges to a bare minimum.<br /><br />For instance, if you're not installing any new plugins or updating WP, that account doesn't need the CREATE or DROP table privileges.<br /><br />For regular, day-to-day usage these are the recommended privileges: SELECT, INSERT, UPDATE and DELETE.", 'hide-my-wp'),
-                'solution' => sprintf(esc_html__("To learn how to revoke permissions from PhpMyAdmin %sClick here%s", 'hide-my-wp'), '<a href="'.HMWP_Classes_Tools::getOption('hmwp_plugin_website').'/how-to-grant-and-revoke-permissions-to-database-using-phpmyadmin/" target="_blank">', '</a>'),
-            ),
+//            'checkMysqlPermissions' => array(
+//                'name' => esc_html__("MySql Grant All Permissions", 'hide-my-wp'),
+//                'value' => false,
+//                'valid' => false,
+//                'warning' => false,
+//                'message' => __("If an attacker gains access to your wp-config.php file and gets the MySQL username and password, he'll be able to login to that database and do whatever that account allows. <br /><br />That's why it's important to keep the account's privileges to a bare minimum.<br /><br />For instance, if you're not installing any new plugins or updating WP, that account doesn't need the CREATE or DROP table privileges.<br /><br />For regular, day-to-day usage these are the recommended privileges: SELECT, INSERT, UPDATE and DELETE.", 'hide-my-wp'),
+//                'solution' => sprintf(esc_html__("To learn how to revoke permissions from PhpMyAdmin %sClick here%s", 'hide-my-wp'), '<a href="'.HMWP_Classes_Tools::getOption('hmwp_plugin_website').'/how-to-grant-and-revoke-permissions-to-database-using-phpmyadmin/" target="_blank">', '</a>'),
+//            ),
             'checkUsersById' => array(
                 'name' => esc_html__("Author URL by ID access", 'hide-my-wp'),
                 'value' => false,
@@ -617,7 +618,11 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController
                 $url = HMWP_Classes_ObjController::getClass('HMWP_Models_Rewrite')->find_replace_url($url);
                 $urls[] = $url;
 
-                $url = admin_url('admin-ajax.php') . '?hmwp_preview=1';
+                if (HMWP_Classes_Tools::getOption('hmwp_hideajax_admin')) {
+                    $url = home_url(HMWP_Classes_Tools::getOption('hmwp_admin-ajax_url')) . '?hmwp_preview=1';
+                }else{
+                    $url = admin_url(HMWP_Classes_Tools::getOption('hmwp_admin-ajax_url')) . '?hmwp_preview=1';
+                }
                 $url = HMWP_Classes_ObjController::getClass('HMWP_Models_Rewrite')->find_replace_url($url);
                 $urls[] = $url;
 
@@ -638,8 +643,35 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController
                     }
                 }
 
+                //Test new admin path. Send all cookies to admin path
+                if (HMWP_Classes_Tools::getDefault('hmwp_admin_url') <> HMWP_Classes_Tools::getOption('hmwp_admin_url') ) {
+
+                    $url = admin_url('admin.php');
+                    $url = HMWP_Classes_ObjController::getClass('HMWP_Models_Rewrite')->find_replace_url($url);
+
+                    if (is_ssl()) {
+                        $url = str_replace('http://', 'https://', $url);
+                    }
+
+                    $response = HMWP_Classes_Tools::hmwp_localcall($url, array('redirection' => 1, 'cookies' => $_COOKIE));
+
+                    if (!is_wp_error($response) && in_array(wp_remote_retrieve_response_code($response), array(404, 302, 301))) {
+                        $error[] = '<a href="' . $url . '" target="_blank" style="word-break: break-word;">' . str_replace('?hmwp_preview=1', '', $url) . '</a> (' . wp_remote_retrieve_response_code($response) . ' ' . wp_remote_retrieve_response_message($response) . ')';
+
+                    }
+                }
+
+                if(!empty($error) && HMWP_Classes_Tools::isNginx()){
+                    $error[] = '<a href="' . esc_url(HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/how-to-setup-hide-my-wp-on-nginx-server/') . '" target="_blank" style="word-break: break-word;line-height: 35px;font-weight: 700;">' . esc_html__("Don't forget to reload the Nginx service.", 'hide-my-wp') . '</a>';
+                }
+
                 if(empty($error)){
-                    wp_send_json_success(esc_html__('Great! The new paths are loading correctly.', 'hide-my-wp'));
+                    $message = array();
+                    $message[] = esc_html__('Great! The new paths are loading correctly.', 'hide-my-wp');
+                    if(HMWP_Classes_Tools::getOption('prevent_slow_loading')){
+                        $message[] = '<a href="' . esc_url(HMWP_Classes_Tools::getSettingsUrl('hmwp_advanced#tab=rollback', true) ) . '" target="_blank" style="word-break: break-word;line-height: 35px;font-weight: 700;">' . sprintf(esc_html__("You can now turn off '%s' option.", 'hide-my-wp'), __('Prevent Broken Website Layout', 'hide-my-wp')) . '</a>';
+                    }
+                    wp_send_json_success(join('<br />', $message));
                 }else{
                     wp_send_json_error(esc_html__('Error! The new paths are not loading correctly. Clear all cache and try again.', 'hide-my-wp') . "<br /><br />" .  join('<br />', $error));
                 }

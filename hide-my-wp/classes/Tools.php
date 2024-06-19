@@ -170,11 +170,25 @@ class HMWP_Classes_Tools
             'hmwp_activity_log_roles' => array(),
             'hmwp_email_address' => '',
 
+            //-- Firewall
+            'whitelist_ip' => array(),
+            'whitelist_paths' => 0,
+            'whitelist_urls' => array(),
+            'banlist_ip' => array(),
+            'banlist_hostname' => array(),
+            'banlist_user_agent' => array(),
+            'banlist_referrer' => array(),
+
             //Temporary Login
             'hmwp_templogin' => 0,
             'hmwp_templogin_role' => 'administrator',
             'hmwp_templogin_redirect' => false,
             'hmwp_templogin_delete_uninstal' => false,
+
+            //Geoblock Login
+            'hmwp_geoblock' => 0,
+            'hmwp_geoblock_countries' => array(),
+            'hmwp_geoblock_urls' => array(),
 
             //2FA Login
             'hmwp_2falogin' => 0,
@@ -191,11 +205,8 @@ class HMWP_Classes_Tools
             'hmwp_bruteforce_register' => 0,
             'hmwp_bruteforce_lostpassword' => 0,
             'hmwp_brute_message' => esc_html__('Your IP has been flagged for potential security violations. Please try again in a little while...', 'hide-my-wp'),
-            'whitelist_ip' => array(),
-            'banlist_ip' => array(),
             'hmwp_hide_classes' => json_encode(array()),
             'trusted_ip_header' => '',
-            'whitelist_paths' => 0,
 
             //Math reCaptcha
             'brute_use_math' => 1,
@@ -448,6 +459,11 @@ class HMWP_Classes_Tools
             }
         }
 
+        //update the whitelist_level
+        if(isset($options['whitelist_paths']) && !isset($options['whitelist_level'])){
+            $options['whitelist_level'] = ($options['whitelist_paths'] == 1 ? 2 : 0);
+        }
+
         //Set the categories and tags paths
         $category_base = get_option('category_base');
         $tag_base = get_option('tag_base');
@@ -509,6 +525,11 @@ class HMWP_Classes_Tools
             if (isset(self::$options['hmwp_shutdownload']) && self::$options['hmwp_shutdownload']) {
                 self::$options['hmwp_hide_in_sitemap'] = self::$options['hmwp_shutdownload'];
                 unset(self::$options['hmwp_shutdownload']);
+            }
+
+            //update the whitelist_level
+            if(isset(self::$options['whitelist_paths'])){
+                unset(self::$options['whitelist_paths']);
             }
 
             //update the login on Cloud when plugin update
@@ -644,6 +665,40 @@ class HMWP_Classes_Tools
     {
         if (defined('DOING_AJAX') && DOING_AJAX ) {
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if it's valid to load firewall on the page
+     *
+     * @return bool
+     */
+    public static function doFirewall()
+    {
+
+        //If allways change paths admin & frontend
+        if (defined('HMW_ALWAYS_RUN_FIREWALL') && HMW_ALWAYS_RUN_FIREWALL ) {
+            return true;
+        }
+
+        //If firewall process is activated
+        if(!apply_filters('hmwp_process_firewall', true)){
+            return false;
+        }
+
+        if(HMWP_Classes_Tools::isApi()){
+            return false;
+        }
+
+        //If not admin
+        if (!is_admin() && !is_network_admin()) {
+            //if user is not logged in
+            if (function_exists('is_user_logged_in') && !is_user_logged_in()) {
+                return true;
+            }
+
         }
 
         return false;
@@ -2152,22 +2207,28 @@ class HMWP_Classes_Tools
     }
 
     /**
-     * Search part of string in array
+     * Search path in array of paths
      *
      * @param string $needle
      * @param array $haystack
      *
      * @return bool
      */
-    public static function searchInString( $string, $haystack )
+    public static function searchInString( $needle, $haystack )
     {
         foreach ( $haystack as $value ) {
-            if($string && $value && $string <> '' && $value <> '') {
+            if($needle && $value && $needle <> '' && $value <> '') {
+
+                //add trail slash to make sure the path matches entirely
+                $needle = trailingslashit($needle);
+                $value = trailingslashit($value);
+
+                //use mb_stripos is possible
                 if (function_exists('mb_stripos')) {
-                    if (mb_stripos($string, $value) !== false) {
+                    if (mb_stripos($needle, $value) !== false) {
                         return true;
                     }
-                } elseif (stripos($string, $value) !== false) {
+                } elseif (stripos($needle, $value) !== false) {
                     return true;
                 }
             }
@@ -2285,9 +2346,14 @@ class HMWP_Classes_Tools
             '192.0.112.0/20',
             '192.0.123.0/22',
             '195.234.108.0/22',
+            '54.148.171.133',//wordfence
+            '35.83.41.128', //wordfence
+            '52.25.185.95', //wordfence
         );
 
-        if (filter_var(home_url(), FILTER_VALIDATE_URL) !== FALSE && strpos(home_url(), '.') !== false) {
+        $domain = (self::isMultisites() && defined('BLOG_ID_CURRENT_SITE')) ? get_home_url(BLOG_ID_CURRENT_SITE) : site_url();
+
+        if (filter_var($domain, FILTER_VALIDATE_URL) !== false && strpos($domain, '.') !== false) {
             if(!self::isLocalFlywheel()){
                 $wl_jetpack[] = '127.0.0.1';
             }

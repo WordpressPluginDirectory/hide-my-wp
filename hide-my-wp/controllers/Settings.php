@@ -157,6 +157,7 @@ class HMWP_Controllers_Settings extends HMWP_Classes_FrontController
         //Show errors on top
         HMWP_Classes_ObjController::getClass('HMWP_Classes_Error')->hookNotices();
 
+        echo '<meta name="viewport" content="width=640">';
         echo '<noscript><div class="alert-danger text-center py-3">'. sprintf(esc_html__("Javascript is disabled on your browser! You need to activate the javascript in order to use %s plugin.", 'hide-my-wp'), HMWP_Classes_Tools::getOption('hmwp_plugin_name')) .'</div></noscript>';
         $this->show(ucfirst(str_replace('hmwp_', '', $page)));
         $this->show('blocks/Upgrade');
@@ -321,6 +322,9 @@ class HMWP_Controllers_Settings extends HMWP_Classes_FrontController
 	        //whitelist_ip
             $this->saveWhiteListIps();
 
+            //whitelist_paths
+            $this->saveWhiteListPaths();
+
 	        //load the after saving settings process
 	        if($this->model->applyPermalinksChanged()){
 		        HMWP_Classes_Error::setNotification(esc_html__('Saved'), 'success');
@@ -397,7 +401,55 @@ class HMWP_Controllers_Settings extends HMWP_Classes_FrontController
 	        }
 
             break;
-        case 'hmwp_advsettings':
+            case 'hmwp_firewall':
+                //Save the settings
+                if(isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+                    /**  @var $this->model HMWP_Models_Settings  */
+                    $this->model->saveValues($_POST);
+
+                    //whitelist_ip
+                    $this->saveWhiteListIps();
+
+                    //blacklist ips,hostnames, user agents, referrers
+                    $this->saveBlackListIps();
+                    $this->saveBlackListHostnames();
+                    $this->saveBlackListUserAgents();
+                    $this->saveBlackListReferrers();
+
+                    //whitelist_paths
+                    $this->saveWhiteListPaths();
+
+                    //Save CDN URLs
+                    if ($codes = HMWP_Classes_Tools::getValue('hmwp_geoblock_countries') ) {
+                        $countries = array();
+                        foreach ( $codes as $code ) {
+                            if ($code <> '' ) {
+                                $code = preg_replace('/[^A-Za-z]/', '', $code);
+                                if ($code <> '' ) {
+                                    $countries[] = $code;
+                                }
+                            }
+                        }
+
+                        HMWP_Classes_Tools::saveOptions('hmwp_geoblock_countries', json_encode($countries));
+                    }else{
+                        HMWP_Classes_Tools::saveOptions('hmwp_geoblock_countries', array());
+                    }
+
+                    //If no change is made on settings, just return
+                    if(!$this->model->checkOptionsChange()) {
+                        return;
+                    }
+
+                    //Save the rules and add the rewrites
+                    $this->model->saveRules();
+
+                    //add action for later use
+                    do_action( 'hmwp_firewall_saved' );
+                }
+
+                break;
+            case 'hmwp_advsettings':
 
             if (!empty($_POST) ) {
                 $this->model->saveValues($_POST);
@@ -498,14 +550,24 @@ class HMWP_Controllers_Settings extends HMWP_Classes_FrontController
             break;
         case 'hmwp_abort':
         case 'hmwp_restore_settings':
-            //get current user tokens
-            $hmwp_token = HMWP_Classes_Tools::getOption('hmwp_token');
-            $api_token = HMWP_Classes_Tools::getOption('api_token');
+
+            //get keys that should not be replaced
+            $tmp_options = array('hmwp_token','api_token','hmwp_plugin_name','hmwp_plugin_menu','hmwp_plugin_logo','hmwp_plugin_website', 'hmwp_plugin_account_show', );
+
+            $tmp_options = array_fill_keys($tmp_options, true);
+            foreach ($tmp_options as $keys => &$value) {
+                $value = HMWP_Classes_Tools::getOption($keys);
+            }
+
             //get the safe options from database
             HMWP_Classes_Tools::$options = HMWP_Classes_Tools::getOptions(true);
-            //set the current user tokens
-            HMWP_Classes_Tools::saveOptions('hmwp_token', $hmwp_token);
-            HMWP_Classes_Tools::saveOptions('api_token', $api_token);
+
+            //set tmp data back to options
+            foreach ($tmp_options as $keys => $value) {
+                HMWP_Classes_Tools::$options[$keys] = $value;
+            }
+            HMWP_Classes_Tools::saveOptions();
+
 
             //set frontend, error & logout to false
             HMWP_Classes_Tools::saveOptions('test_frontend', false);
@@ -715,30 +777,189 @@ class HMWP_Controllers_Settings extends HMWP_Classes_FrontController
 
     }
 
-	/**
+    /**
      * Save the whitelist IPs into database
-	 * @return void
-	 */
+     * @return void
+     */
     private function saveWhiteListIps(){
 
-	    $whitelist = HMWP_Classes_Tools::getValue('whitelist_ip', '', true);
-	    $ips = explode(PHP_EOL, $whitelist);
+        $whitelist = HMWP_Classes_Tools::getValue('whitelist_ip', '', true);
 
-	    if (!empty($ips)) {
-		    foreach ($ips as &$ip) {
-			    $ip = trim($ip);
+        //is there are separated by commas
+        if(strpos($whitelist, ',') !== false){
+            $whitelist = str_replace(',', PHP_EOL, $whitelist);
+        }
 
-			    // Check for IPv4 IP cast as IPv6
-			    if (preg_match('/^::ffff:(\d+\.\d+\.\d+\.\d+)$/', $ip, $matches)) {
-				    $ip = $matches[1];
-			    }
-		    }
+        $ips = explode(PHP_EOL, $whitelist);
 
-		    $ips = array_unique($ips);
-		    HMWP_Classes_Tools::saveOptions('whitelist_ip', json_encode($ips));
-	    }
+        if (!empty($ips)) {
+            foreach ($ips as  &$ip) {
+                $ip = trim($ip);
+
+                // Check for IPv4 IP cast as IPv6
+                if (preg_match('/^::ffff:(\d+\.\d+\.\d+\.\d+)$/', $ip, $matches)) {
+                    $ip = $matches[1];
+                }
+            }
+
+            $ips = array_unique($ips);
+            HMWP_Classes_Tools::saveOptions('whitelist_ip', json_encode($ips));
+        }
+
     }
 
+    /**
+     * Save the whitelist Paths into database
+     * @return void
+     */
+    private function saveWhiteListPaths(){
+
+        $whitelist = HMWP_Classes_Tools::getValue('whitelist_urls', '', true);
+
+        //is there are separated by commas
+        if(strpos($whitelist, ',') !== false){
+            $whitelist = str_replace(',', PHP_EOL, $whitelist);
+        }
+
+        $urls = explode(PHP_EOL, $whitelist);
+
+        if (!empty($urls)) {
+            foreach ($urls as &$url) {
+                $url = trim($url);
+            }
+
+            $urls = array_unique($urls);
+            HMWP_Classes_Tools::saveOptions('whitelist_urls', json_encode($urls));
+        }
+
+    }
+
+    /**
+     * Save the whitelist IPs into database
+     * @return void
+     */
+    private function saveBlackListIps(){
+
+        $banlist = HMWP_Classes_Tools::getValue('banlist_ip', '', true);
+
+        //is there are separated by commas
+        if(strpos($banlist, ',') !== false){
+            $banlist = str_replace(',', PHP_EOL, $banlist);
+        }
+
+        $ips = explode(PHP_EOL, $banlist);
+
+        if (!empty($ips)) {
+            foreach ($ips as &$ip) {
+                $ip = trim($ip);
+
+                // Check for IPv4 IP cast as IPv6
+                if (preg_match('/^::ffff:(\d+\.\d+\.\d+\.\d+)$/', $ip, $matches)) {
+                    $ip = $matches[1];
+                }
+            }
+
+            $ips = array_unique($ips);
+            HMWP_Classes_Tools::saveOptions('banlist_ip', json_encode($ips));
+        }
+
+    }
+
+    /**
+     * Save the hostname
+     * @return void
+     */
+    private function saveBlackListHostnames(){
+
+        $banlist = HMWP_Classes_Tools::getValue('banlist_hostname', '', true);
+
+        //is there are separated by commas
+        if(strpos($banlist, ',') !== false){
+            $banlist = str_replace(',', PHP_EOL, $banlist);
+        }
+
+        $list = explode(PHP_EOL, $banlist);
+
+        if (!empty($list)) {
+            foreach ($list as $index => &$row) {
+                $row = trim($row);
+
+                if (preg_match('/^[a-z0-9\.\*\-]+$/i', $row, $matches)) {
+                    $row = $matches[0];
+                }else{
+                    unset($list[$index]);
+                }
+            }
+
+            $list = array_unique($list);
+            HMWP_Classes_Tools::saveOptions('banlist_hostname', json_encode($list));
+        }
+
+    }
+
+    /**
+     * Save the User Agents
+     * @return void
+     */
+    private function saveBlackListUserAgents(){
+
+        $banlist = HMWP_Classes_Tools::getValue('banlist_user_agent', '', true);
+
+        //is there are separated by commas
+        if(strpos($banlist, ',') !== false){
+            $banlist = str_replace(',', PHP_EOL, $banlist);
+        }
+
+        $list = explode(PHP_EOL, $banlist);
+
+        if (!empty($list)) {
+            foreach ($list as $index =>  &$row) {
+                $row = trim($row);
+
+                if (preg_match('/^[a-z0-9\.\*\-]+$/i', $row, $matches)) {
+                    $row = $matches[0];
+                }else{
+                    unset($list[$index]);
+                }
+            }
+
+            $list = array_unique($list);
+            HMWP_Classes_Tools::saveOptions('banlist_user_agent', json_encode($list));
+        }
+
+    }
+
+    /**
+     * Save the Referrers
+     * @return void
+     */
+    private function saveBlackListReferrers(){
+
+        $banlist = HMWP_Classes_Tools::getValue('banlist_referrer', '', true);
+
+        //is there are separated by commas
+        if(strpos($banlist, ',') !== false){
+            $banlist = str_replace(',', PHP_EOL, $banlist);
+        }
+
+        $list = explode(PHP_EOL, $banlist);
+
+        if (!empty($list)) {
+            foreach ($list as $index => &$row) {
+                $row = trim($row);
+
+                if (preg_match('/^[a-z0-9\.\*\-]+$/i', $row, $matches)) {
+                    $row = $matches[0];
+                }else{
+                    unset($list[$index]);
+                }
+            }
+
+            $list = array_unique($list);
+            HMWP_Classes_Tools::saveOptions('banlist_referrer', json_encode($list));
+        }
+
+    }
 
     /**
      * If javascript is not loaded
