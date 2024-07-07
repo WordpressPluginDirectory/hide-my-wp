@@ -204,6 +204,8 @@ class HMWP_Classes_Tools
             'hmwp_bruteforce' => 0,
             'hmwp_bruteforce_register' => 0,
             'hmwp_bruteforce_lostpassword' => 0,
+            'hmwp_bruteforce_woocommerce' => 0,
+            'hmwp_bruteforce_username' => 0,
             'hmwp_brute_message' => esc_html__('Your IP has been flagged for potential security violations. Please try again in a little while...', 'hide-my-wp'),
             'hmwp_hide_classes' => json_encode(array()),
             'trusted_ip_header' => '',
@@ -307,8 +309,6 @@ class HMWP_Classes_Tools
             'hmwp_mapping_text_show' => 1,
             'hmwp_mapping_url_show' => 1,
             'hmwp_mapping_cdn_show' => 1,
-	        //PRO
-            'hmwp_bruteforce_woocommerce' => 0,
 
         );
         self::$default = array(
@@ -350,6 +350,7 @@ class HMWP_Classes_Tools
             'hmwp_hide_admin_loggedusers' => 0,
             'hmwp_hide_login' => 0,
             'hmwp_hide_wplogin' => 0,
+            'hmwp_hide_newlogin' => 0,
             'hmwp_disable_language_switcher' => 0,
             'hmwp_hide_plugins' => 0,
             'hmwp_hide_all_plugins' => 0,
@@ -405,6 +406,7 @@ class HMWP_Classes_Tools
             'hmwp_hide_admin_loggedusers' => 0,
             'hmwp_hide_login' => 1,
             'hmwp_hide_wplogin' => 1,
+            'hmwp_hide_newlogin' => 1,
             'hmwp_disable_language_switcher' => 0,
             'hmwp_hide_plugins' => 1,
             'hmwp_hide_all_plugins' => 0,

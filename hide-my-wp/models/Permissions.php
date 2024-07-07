@@ -12,9 +12,7 @@ class HMWP_Models_Permissions
 
     protected $paths = array();
 
-
     public function __construct() {
-
 
         $server_config_file = HMWP_Classes_ObjController::getClass('HMWP_Models_Rules')->getConfFile();
         $wp_config_file = HMWP_Classes_Tools::getConfigFile();
@@ -23,21 +21,22 @@ class HMWP_Models_Permissions
         //Set the main paths to check
         if(!HMWP_Classes_Tools::isWindows()){
             $paths =  array(
-                ABSPATH => 0755,
-                ABSPATH . HMWP_Classes_Tools::getOption('hmwp_wp-includes_url') => 0755,
-                ABSPATH . HMWP_Classes_Tools::getOption('hmwp_admin_url') => 0755,
-                ABSPATH . HMWP_Classes_Tools::getOption('hmwp_admin_url') . '/js' => 0755,
-                WP_CONTENT_DIR => 0755,
-                get_theme_root() => 0755,
-                WP_PLUGIN_DIR => 0755,
-                $wp_upload_dir => 0755,
-                $wp_config_file => 0444,
-                $server_config_file => 0444,
+                ABSPATH => HMW_DIR_PERMISSION,
+                ABSPATH . HMWP_Classes_Tools::getDefault('hmwp_wp-includes_url') => HMW_DIR_PERMISSION,
+                ABSPATH . HMWP_Classes_Tools::getDefault('hmwp_admin_url') => HMW_DIR_PERMISSION,
+                ABSPATH . HMWP_Classes_Tools::getDefault('hmwp_admin_url') . '/js' => HMW_DIR_PERMISSION,
+                ABSPATH . HMWP_Classes_Tools::getDefault('hmwp_login_url')  => HMW_FILE_PERMISSION,
+                WP_CONTENT_DIR => HMW_DIR_PERMISSION,
+                get_theme_root() => HMW_DIR_PERMISSION,
+                WP_PLUGIN_DIR => HMW_DIR_PERMISSION,
+                $wp_upload_dir => HMW_DIR_PERMISSION,
+                $wp_config_file => HMW_CONFIG_PERMISSION,
+                $server_config_file => HMW_CONFIG_PERMISSION,
             );
         }else{
             $paths = [
-                $wp_config_file => 0444,
-                $server_config_file => 0444,
+                $wp_config_file => HMW_CONFIG_PERMISSION,
+                $server_config_file => HMW_CONFIG_PERMISSION,
             ];
         }
 
@@ -88,14 +87,46 @@ class HMWP_Models_Permissions
                 //get chmod of the path
                 $display_chmod = sprintf("0%d", $wp_filesystem->getchmod($path));
 
-                if(sprintf( '%o', $suggested ) < sprintf( '%o', fileperms( $path ) & 0777 )){
-                    $values[] = array(
-                        'path' => $path,
-                        'suggested' => $suggested,
-                        'display_path' => $display_path,
-                        'display_permission' => $display_chmod
-                    );
+                if($wp_filesystem->is_file($path) ){
+
+                    if (HMWP_Classes_Tools::isWindows() ) {
+                        if($wp_filesystem->is_writable($path)) {
+                            $values[] = array(
+                                'path' => $path,
+                                'suggested' => $suggested,
+                                'display_path' => $display_path,
+                                'display_permission' => $display_chmod
+                            );
+                        }
+                    }else {
+                        $chmod = $wp_filesystem->getchmod($path);
+                        $suggested = sprintf('%o', $suggested);
+
+                        if($suggested < $chmod) {
+                            $values[] = array(
+                                'path' => $path,
+                                'suggested' => $suggested,
+                                'display_path' => $display_path,
+                                'display_permission' => $display_chmod
+                            );
+                        }
+                    }
+
+                }else{
+                    $chmod = $wp_filesystem->getchmod($path);
+                    $suggested = sprintf('%o', $suggested);
+
+                    if($suggested < $chmod) {
+                        //if it's a directory
+                        $values[] = array(
+                            'path' => $path,
+                            'suggested' => $suggested,
+                            'display_path' => $display_path,
+                            'display_permission' => $display_chmod
+                        );
+                    }
                 }
+
             }
         }
 
