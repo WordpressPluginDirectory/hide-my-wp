@@ -267,6 +267,7 @@ class HMWP_Classes_Tools
             'hmwp_disable_source_message' => "View Source is disabled!",
 
             'hmwp_disable_copy_paste' => 0,
+            'hmwp_disable_paste' => 1,
             'hmwp_disable_copy_paste_loggedusers' => 0,
             'hmwp_disable_copy_paste_roles' => array('subscriber'),
             'hmwp_disable_copy_paste_message' => "Copy/Paste is disabled!",
@@ -637,11 +638,7 @@ class HMWP_Classes_Tools
      */
     public static function loadMultilanguage()
     {
-        if (!defined('WP_PLUGIN_DIR') ) {
-            load_plugin_textdomain(dirname(HMWP_BASENAME), dirname(HMWP_BASENAME) . '/languages/');
-        } else {
-            load_plugin_textdomain(dirname(HMWP_BASENAME), false, dirname(HMWP_BASENAME) . '/languages/');
-        }
+	    load_plugin_textdomain(dirname(HMWP_BASENAME), false, dirname(HMWP_BASENAME) . '/languages/');
     }
 
     /**
@@ -1552,15 +1549,32 @@ class HMWP_Classes_Tools
     {
 
         if (empty(self::$active_plugins) ) {
-            self::$active_plugins = (array)get_option('active_plugins', array());
 
             if (self::isMultisites() ) {
 
-                if (! function_exists('get_plugins') ) {
-                    include_once ABSPATH . 'wp-admin/includes/plugin.php';
+                if(!$sitewide_plugins = get_site_option( 'active_sitewide_plugins' )){
+                    $sitewide_plugins = array();
                 }
 
-                self::$active_plugins = array_keys(get_plugins());
+                self::$active_plugins = array_keys($sitewide_plugins);
+
+                $sites = get_sites( array( 'number'  => 10000, 'public'  => 1, 'deleted' => 0, ) );
+                foreach( $sites as $site ) {
+                    switch_to_blog( $site->blog_id );
+
+                    $active_plugins = (array)get_option('active_plugins', array());
+
+                    self::$active_plugins = array_merge(self::$active_plugins, $active_plugins);
+
+                    restore_current_blog();
+                }
+
+                if(!empty(self::$active_plugins)){
+                    self::$active_plugins = array_unique(self::$active_plugins);
+                }
+
+            }else{
+                self::$active_plugins = (array)get_option('active_plugins', array());
             }
 
         }

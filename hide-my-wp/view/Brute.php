@@ -199,7 +199,7 @@
 
                                 <?php if (HMWP_Classes_Tools::getOption('brute_captcha_site_key') <> '' && HMWP_Classes_Tools::getOption('brute_captcha_secret_key') <> '') { ?>
                                     <div class="col-sm-12 border-bottom border-light py-3 mx-0 my-3">
-                                        <button type="button" class="btn btn-lg btn-default brute_recaptcha_test hmwp_modal" data-remote="<?php echo site_url('wp-login.php') ?>" data-target="#brute_recaptcha_modal" ><?php echo esc_html__('reCAPTCHA V2 Test', 'hide-my-wp'); ?></button>
+                                        <button type="button" class="btn btn-lg btn-default brute_recaptcha_test hmwp_modal" data-remote="<?php echo site_url('wp-login.php') ?>?nordt=1" data-target="#brute_recaptcha_modal" ><?php echo esc_html__('reCAPTCHA V2 Test', 'hide-my-wp'); ?></button>
 
                                         <h4 class="mt-5 mb-3"><?php echo esc_html__('Next Steps', 'hide-my-wp'); ?></h4>
                                         <ol>
@@ -238,7 +238,7 @@
 
                                 <?php if (HMWP_Classes_Tools::getOption('brute_captcha_site_key_v3') <> '' && HMWP_Classes_Tools::getOption('brute_captcha_secret_key_v3') <> '') { ?>
                                     <div class="col-sm-12 border-bottom border-light py-3 mx-0 my-3">
-                                        <button type="button" class="btn btn-lg btn-default brute_recaptcha_test hmwp_modal" data-remote="<?php echo site_url('wp-login.php') ?>" data-target="#brute_recaptcha_modal" ><?php echo esc_html__('reCAPTCHA V3 Test', 'hide-my-wp'); ?></button>
+                                        <button type="button" class="btn btn-lg btn-default brute_recaptcha_test hmwp_modal" data-remote="<?php echo site_url('wp-login.php') ?>?nordt=1" data-target="#brute_recaptcha_modal" ><?php echo esc_html__('reCAPTCHA V3 Test', 'hide-my-wp'); ?></button>
 
                                         <h4 class="mt-5 mb-3"><?php echo esc_html__('Next Steps', 'hide-my-wp'); ?></h4>
                                         <ol>
@@ -299,6 +299,14 @@
                             <div class="col-sm-12 text-center border-light py-2 m-0">
                                 <a href="<?php echo HMWP_Classes_Tools::getSettingsUrl('hmwp_firewall#tab=whitelist', true) ?>" target="_blank">
                                     <?php echo esc_html__('Manage whitelist & blacklist IP addresses', 'hide-my-wp'); ?>
+                                </a>
+                            </div>
+
+                            <div class="col-sm-12 text-center border-top pt-4 my-4">
+                                <h5><?php echo sprintf(esc_html__('Use the %s shortcode to integrate it with other login forms.', 'hide-my-wp'), '<span style="color:darkred">[hmwp_bruteforce]</span>'); ?></h5>
+
+                                <a href="<?php echo esc_url(HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/integrating-brute-force-protection-in-elementor-login-forms/') ?>" target="_blank">
+                                    <?php echo esc_html__('Learn how to use the shortcode', 'hide-my-wp'); ?>
                                 </a>
                             </div>
                         </div>
