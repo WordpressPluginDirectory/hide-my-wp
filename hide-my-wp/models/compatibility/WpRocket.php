@@ -14,9 +14,12 @@ class HMWP_Models_Compatibility_WpRocket extends HMWP_Models_Compatibility_Abstr
 	public function hookAdmin()
 	{
 		add_filter('rocket_cache_reject_uri', array($this, 'rocket_reject_url'), PHP_INT_MAX);
-		add_action('hmwp_mappsettings_saved', array($this, 'burstMapping'));
-		add_action('hmwp_settings_saved', array($this, 'burstMapping'));
-	}
+
+        if(!HMWP_Classes_Tools::isWpengine()) {
+            add_action('hmwp_mappsettings_saved', array($this, 'burstMapping'));
+            add_action('hmwp_settings_saved', array($this, 'burstMapping'));
+        }
+    }
 
 	public function hookFrontend() {
 
@@ -42,7 +45,7 @@ class HMWP_Models_Compatibility_WpRocket extends HMWP_Models_Compatibility_Abstr
 	public function rocket_reject_url( $uri )
 	{
 		if (HMWP_Classes_Tools::$default['hmwp_login_url'] <> HMWP_Classes_Tools::getOption('hmwp_login_url') ) {
-			$path = parse_url(site_url(), PHP_URL_PATH);
+			$path = wp_parse_url(site_url(), PHP_URL_PATH);
 			$uri[] = ($path <> '/' ? $path . '/' : $path) . HMWP_Classes_Tools::getOption('hmwp_login_url');
 		}
 
@@ -75,7 +78,7 @@ class HMWP_Models_Compatibility_WpRocket extends HMWP_Models_Compatibility_Abstr
 					$blog_ids[] = get_current_blog_id();
 				}
 
-				$home_root = parse_url(home_url());
+				$home_root = wp_parse_url(home_url());
 				if (isset($home_root['path']) ) {
 					$home_root = trailingslashit($home_root['path']);
 				} else {

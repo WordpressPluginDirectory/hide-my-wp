@@ -4,64 +4,40 @@ Tags: hide,security,firewall,login,wp admin
 Requires at least: 4.6
 Tested up to: 6.6
 Requires PHP: 7.0
-Stable tag: 5.3.00
+Stable tag: 5.3.01
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Hide WP paths, wp-login, wp-admin and more. Security against Brute Force attacks, SQL/Script Injections. 7G & 8G firewalls against most bot attacks.
+Hide WP paths, wp-login, wp-admin and more. Hack Prevention, Brute Force protection, 8G firewall, 2FA Login, and more.
 
 == Description ==
 
 Level up your WordPress security with Hide My WP Ghost plugin!
 
-**Hide My WP Ghost** is your ultimate **WordPress security** solution. With powerful, easy-to-use features, it boosts your site's security without altering any directories or files.
+**Hide My WP Ghost** is a **Hack Prevention WordPress Security Plugin**. With powerful, easy-to-use features, it boosts your site's security without altering any directories or files.
 
-Join over 100,000 secured websites with Hide My WP Ghost. The plugin has blocked over 9 million brute force attempts and stopped 140,000 monthly hacks.
+Join **over 100,000 secured websites** with Hide My WP Ghost. The plugin has **blocked over 9 million brute force attempts** and **stopped over 140,000 monthly hacks**.
 
-Key features include powerful protection against Scripts and SQL Injections, Brute Force attacks, XML-RPC attacks, XSS, and more.
-
-Hide My WP Ghost changes and hides WP common paths, admin & login paths, plugin paths, and theme paths, protecting your site from hacker bots.
-
-Note: No files or directories are physically altered. All changes are implemented through server rewrite rules, ensuring no impact on SEO or loading speed.
+Key features include powerful protection against:
+>  - Brute Force Attacks
+>  - SQL Injection Attacks
+>  - Script Injection Attacks
+>  - XML-RPC attacks
+>  - File Inclusion
+>  - Malware injection
+>  - Cross-Site Scripting (XSS)
+>  - Throttling of Access Attempts to Entry Points
+>  - and more
 
 Protect your site today! Hide My WP Ghost hides all common paths from hackers, shielding all your plugins and themes effectively.
 
 [youtube https://www.youtube.com/watch?v=gwRKHQTNkh0]
 YouTube - Why You Must Have <a href="https://hidemywpghost.com/">Hide My WP</a>
 
-> Check the Demo Website source code:
-> <a href="https://demo.wpplugins.tips/">https://demo.wpplugins.tips/</a>
-> (the elementor is changed in files and classes using the PRO version)
 
+Hide My WP Ghost is packed with over 45 security features:
 
-> Check the Redirected URLs in Demo Website (all are redirected to Front Page):
-> <a href="https://demo.wpplugins.tips/wp-admin/">https://demo.wpplugins.tips/wp-admin</a>
-> <a href="https://demo.wpplugins.tips/wp-login/">https://demo.wpplugins.tips/wp-login</a>
-
-
-> Check the Hidden Common Paths in Demo Website (all show 404 Page Not Found):
-> <a href="https://demo.wpplugins.tips/wp-content/">https://demo.wpplugins.tips/wp-content</a>
-> <a href="https://demo.wpplugins.tips/wp-content/plugins/">https://demo.wpplugins.tips/wp-content/plugins</a>
-> <a href="https://demo.wpplugins.tips/wp-content/themes/">https://demo.wpplugins.tips/wp-content/themes</a>
-
-
-The plugin works with other security plugins like Wordfence, iThemes Security, Sucuri and adds a layer of security to your WordPress website against hacker bots.
-
-Hide My WP Ghost is compatible with all server types, hosting services, and also supports WP Multisite.
-
-Over 90,000 hacking attacks per minute strike WordPress sites and WordPress hosting around the world, hitting not only large corporate websites packed with sensitive data, but also sites belonging to small businesses, independent entrepreneurs, and individuals running personal blogs.
-
-Security of WordPress sites typically tops the list of concerns for new and experienced website owners alike.
-
-For owners of WordPress sites, statistics like that one raises particular worries about the security not just of individual WordPress sites, but of WordPress itself.
-
-**Is your website secure?** Check your website with <a href="https://wpplugins.tips/wordpress-vulnerability-detector/" >Free Website Security Check</a>
-
-Protect your WordPress website by hiding the authentication paths like wp-admin, wp-login.php, and wp-login, and change the common WordPress paths like wp-content, wp-includes, uploads, and more.
-
-Hide My WP Ghost is packed with awesome security features:
-
-> <strong>Hide My WP Ghost (over 40 FREE Security Features):</strong>
+> <strong>Change and Hide Paths:</strong>
 >
 > *   Hide WordPress wp-admin, and show 404 error or a custom page
 > *   Hide WordPress wp-login.php, and show 404 error or a custom page
@@ -95,8 +71,10 @@ Hide My WP Ghost is packed with awesome security features:
 > *   Change paths in Sitemap.xml
 > *   Change paths in Robots.txt
 >
-> <strong>Hide Options:</strong>
+> <strong>Firewall:</strong>
 >
+> *   Two-factor Authentication By Code (2FA)
+> *   Two-factor Authentication By Email (2FA)
 > *   Security Headers against XSS & Code Injections
 > *   Security Header Strict-Transport-Security
 > *   Security Header Content-Security-Policy
@@ -110,6 +88,7 @@ Hide My WP Ghost is packed with awesome security features:
 > *   Block by User Agents
 > *   Block by Referrers
 > *   Block by Hostnames
+> *   Hide Website from Theme Detectors
 >
 > <strong>Hide Options:</strong>
 >
@@ -170,6 +149,8 @@ Hide My WP Ghost is packed with awesome security features:
 >
 > <strong>Extra Features: </strong>
 >
+> *   Magic Link Login Without Password
+> *   Temporary Logins Without Password
 > *   Fix relative URLs
 > *   Backup and Restore settings
 > *   Change classes on source code using Text Mapping
@@ -209,37 +190,67 @@ Hide My WP Ghost is packed with awesome security features:
 > *   Recommended by Wp Rocket
 > *   Recommended by WPML
 >
-> <strong>See All FREE Security Features (over 40):</strong>
+> <strong>See All FREE Security Features:</strong>
 > <a href="https://hidemywp.co/security-features/">Hide My WP Free Features</a>
 
 
-> <strong>See All Premium Security Features (over 70):</strong>
-> * All the Hide My WP Ghost Free Features
-> * Hide WordPress Common Paths by Extension
-> * Hide WordPress Files like wp-config.php, wp-config-sample.php, wp-load.php, wp-settings.php, wp-blog-header.php, readme.html, readme.txt, install.php, license.txt, php.ini, hidemywp.conf, bb-config.php, error_log, debug.log
-> * Cloud Events Monitoring
-> * Cloud Brute Force Monitoring
-> * Temporary Logins Without Password
-> * Magic Link Login Without Password
-> * Two-factor Authentication By Code (2FA)
-> * Two-factor Authentication By Email (2FA)
-> * Geo Security
-> * Country Blocking
-> * Security Fix
-> * and more
+> <strong>Premium Security Features (over 70):</strong>
+>
+> *   Hide WordPress Common Paths by Extension
+> *   Hide WordPress Files like wp-config.php, wp-config-sample.php, wp-load.php, wp-settings.php, wp-blog-header.php, readme.html, readme.txt, install.php, license.txt, php.ini, hidemywp.conf, bb-config.php, error_log, debug.log
+> *   Events/Actions Monitoring (Cloud Backup)
+> *   Brute Force Monitoring (Cloud Backup)
+> *   Geo Security
+> *   Country Blocking
+> *   Files Permission Fix
+> *   Database Prefix Fix
+> *   SALT keys Fix
+> *   and more
 > <a href="https://hidemywpghost.com/hide-my-wp-ghost-security-features/">Hide My WP Premium Feature</a>
 
-Compatible with: <strong>WP Multisite, Apache, Litespeed, Nginx and IIS</strong>.
+Hide My WP Ghost is compatible with all server types, hosting services, and also supports WP Multisite.
 
-Plugins Compatibility updates: **Woocommerce, WPML, WPMUDEV, W3 Total Cache, Gravity, WP Super Cache, WP Fastest Cache, Hummingbird Cache, Cachify Cache, Litespeed Cache, SiteGround Optimizer,
+Compatible server types: <strong>WP Multisite, Apache, Litespeed, Nginx and Windows IIS</strong>.
+Hosting Compatibility checked: **WP Engine, Inmotion Hosting, Hostgator Hosting, Godaddy Hosting, Host1plus, Payperhost, Fastcomet, Dreamhost, Bitnami Apache, Bitnami Nginx, Google Cloud Hosting, Amazon AWS Lightsail, Litespeed Hosting, Flywheels Hosting, Kinsta Hosting, Ploi.io, CloudPanel, RunCloud**
+
+Plugins Compatibility updates: **Woocommerce, WPML, WPMUDEV, W3 Total Cache, Gravity, WP Super Cache, WP Fastest Cache, Hummingbird Cache, Cachify Cache, Litespeed Cache, SiteGround Optimizer, Nitropack,
 Cache Enabler, CDN Enabler, WOT Cache, Autoptimize, Jetpack by WordPress, Contact Form 7, bbPress, Manage WP,
-All In One SEO, Rank Math, Yoast SEO, Squirrly SEO, WP-Rocket, Minify HTML, iThemes Security, Sucuri Security, Really Simple SSL, WordFence Security, WP Cerber Security, BBQ Firewall, Anti-Malware Security,
+All In One SEO, Rank Math, Yoast SEO, Squirrly SEO, WP-Rocket, Minify HTML, Solid Security, Sucuri Security, Really Simple SSL, WordFence Security, WP Cerber Security, BBQ Firewall, Anti-Malware Security,
 Back-Up WordPress, Elementor Page Builder, Divi Builder, Weglot Translate, AddToAny Share Btn, Limit Login Attempts Reloaded, Loginizer, Shield Security, Asset CleanUp, WP Hide & Security Enhancer, and more**
 
 Compatibility Plugins List: <a href="https://hidemywpghost.com/hide-my-wp-compatibility-plugins-list/">Hide My WP Compatibility Plugins</a>
 Compatibility Theme List: <a href="https://hidemywpghost.com/hide-my-wp-ghost-compatibility-themes-list/">Hide My WP Compatibility Themes</a>
 
-Hosting Compatibility checked: **WP Engine, Inmotion Hosting, Hostgator Hosting, Godaddy Hosting, Host1plus, Payperhost, Fastcomet, Dreamhost, Bitnami Apache, Bitnami Nginx, Google Cloud Hosting, Amazon AWS Lightsail, Litespeed Hosting, Flywheels Hosting, Kinsta Hosting, Ploi.io, CloudPanel, RunCloud**
+Hide My WP Ghost changes and hides WP common paths, admin & login paths, plugin paths, and theme paths, protecting your site from hacker bots.
+
+Note: No files or directories are physically altered. All changes are implemented through server rewrite rules, ensuring no impact on SEO or loading speed.
+
+The plugin works with other security plugins like Wordfence, Solid Security, Sucuri and adds a layer of security to your WordPress website against hacker bots.
+
+> Check the Demo Website source code:
+> <a href="https://demo.wpplugins.tips/">https://demo.wpplugins.tips/</a>
+> (the elementor is changed in files and classes using the PRO version)
+
+
+> Check the Redirected URLs in Demo Website (all are redirected to Front Page):
+> <a href="https://demo.wpplugins.tips/wp-admin/">https://demo.wpplugins.tips/wp-admin</a>
+> <a href="https://demo.wpplugins.tips/wp-login/">https://demo.wpplugins.tips/wp-login</a>
+
+
+> Check the Hidden Common Paths in Demo Website (all show 404 Page Not Found):
+> <a href="https://demo.wpplugins.tips/wp-content/">https://demo.wpplugins.tips/wp-content</a>
+> <a href="https://demo.wpplugins.tips/wp-content/plugins/">https://demo.wpplugins.tips/wp-content/plugins</a>
+> <a href="https://demo.wpplugins.tips/wp-content/themes/">https://demo.wpplugins.tips/wp-content/themes</a>
+
+Over 90,000 hacking attacks per minute strike WordPress sites and WordPress hosting around the world, hitting not only large corporate websites packed with sensitive data, but also sites belonging to small businesses, independent entrepreneurs, and individuals running personal blogs.
+
+Security of WordPress sites typically tops the list of concerns for new and experienced website owners alike.
+
+For owners of WordPress sites, statistics like that one raises particular worries about the security not just of individual WordPress sites, but of WordPress itself.
+
+**Is your website secure?** Check your website with <a href="https://hidemywpghost.com/#security_check" >Free Website Security Check</a>
+
+Protect your WordPress website by hiding the authentication paths like wp-admin, wp-login.php, login, wp-signup.php, and change the common WordPress paths like wp-content, wp-includes, uploads, and more.
 
 Being able to protect the common paths is critical because you get to keep hacker bots away from sensitive website data.
 
@@ -273,7 +284,7 @@ Step 4. There, you have the 'Upload' button. Click the 'Upload' button
 Step 5. Upload the hide-my-wp.zip file.
 Step 6. After the upload it's finished, click Activate Plugin.
 Step 7. Connect the plugin using your email to get a free access token
-Step 8. Follow the setup guide from: https://hidemywpghost.com/article/how-to-install-hide-my-wp-ghost-lite/
+Step 8. Follow the setup guide from: https://hidemywpghost.com/kb/hide-my-wp-ghost-tutorial/
 Enjoy!
 
 Install Hide My WP Ghost Lite directly from the WordPress directory:
@@ -282,7 +293,7 @@ Step 2. In the menu displayed on the left, there is a 'Plugins' tab. Click it.
 Step 3. Search for 'Hide My WP'.
 Step 4. After the plugin is shown, click Activate Hide My WP Ghost
 Step 5. Connect the plugin using your email to get a free access token
-Step 6. Follow the setup guide from: https://hidemywpghost.com/article/how-to-install-hide-my-wp-ghost-lite/
+Step 6. Follow the setup guide from: https://hidemywpghost.com/kb/hide-my-wp-ghost-tutorial/
 Enjoy!
 
 [youtube https://youtu.be/zhvRGHMjKic]
@@ -290,25 +301,48 @@ Enjoy!
 > <a href="https://hidemywpghost.com/knowledge-base/">Hide My WP Ghost Knowledge Base</a>:
 
 == Screenshots ==
-1. Change wp-admin and wp-login.php paths and show 404 Error instead. This is a very important WordPress Security step.
-2. Change all WordPress Common paths wp-content, wp-includes, uploads, plugins, themes, etc.
-3. Change Class names and ID names from the source code to hide WordPress default classes.
-4. Setup login and logout redirects based on the user role.
-5. Setup Brute Force Math protection on your custom login page.
-6. Run Security Check to check over 35 security signals with detailed solutions.
-7. Set custom plugins name and themes name to be able to hide the WordPress Common Paths
-8. Change the login path and protect your website from hacker bots
-9. Customize the wp-admin path while logged in as an administrator
+1. Hide My WP > Change Paths > Level Of Security
+2. Hide My WP > Change Paths > Admin Security
+3. Hide My WP > Change Paths > Login Security
+4. Hide My WP > Change Paths > Core Security
+5. Hide My WP > Change Paths > API Security
+6. Hide My WP > Firewall > 8G Firewall
+7. Hide My WP > Brute Force > reCaptcha Protection
+8. Hide My WP > Two Factor > 2FA Login
+9. Hide My WP > Mapping > Text Mapping
+10. Hide My WP > Mapping > URL Mapping
+11. Hide My WP > Tweaks > Hide Options
+12. Hide My WP > Tweaks > Redirect Options
+13. Hide My WP > Temporary Login > Logins
+14. New Login Path /newlogin
+15. Old Login Path shows 404 Error /wp-login.php
+16. Old Admin Path shows 404 Error /wp-admin
+17. New custom core paths changed with Hide My WP Ghost
 
 == Changelog ==
-= 5.3.00 (06 Sept 2024) =
-Update - Compatibility with WP 6.6.1 & 8.3.11
-Update - Compatibility with Nitrocache
-Update - Compatibility with WordFence plugin
+= 5.3.01 (07 Oct 2024) =
+Update - Added Hide My WP Advanced Pack in Plugins suggestion
+Update - Added Drupal 11 in CMS simulation
+Update - Set 404 Not Found error as default option for hidden paths
+Update - the files CSS and JS files from WP 6.6 when Clean Login is selected in Advanced > Compatibility
+Update - Added the option to pause the plugin for 5 minutes for testing purposes
+Fixed - Redirect to homepage the newadmin when user is not logged in
+
+= 5.3.00 (20 Sept 2024) =
+Update - Added New Feature Magic Link Login Without Password in Hide My WP > Overview
+Update - Added New Feature Two-factor Authentication By Code (2FA) in Hide My WP > Overview
+Update - Added New Feature Two-factor Authentication By Email (2FA) in Hide My WP > Overview
+Update - Added New Feature Temporary Logins Without Password in Hide My WP > Overview
+Update - Compatibility with WP 6.6.2 & 8.3.11
 Update - Brute Force compatibility with UsersWP plugin
 Update - Cookie set on WP Multisite with subdomains
 Update - Brute Force shortcode to work with different login forms
 Update - Brute Force shortcode to work with Elementor login form
+Fixed - Compatibility with Nitrocache
+Fixed - Compatibility with Squirrly SEO
+Fixed - Compatibility with Autoptimize
+Fixed - Compatibility with Woocommerce
+Fixed - Compatibility with Wordfence
 Fixed - Security Check on admin url and login url
 Fixed - Google reCaptcha on frontend popup to load google header if not already loaded
 Fixed - Hide New Login Path to allow redirects from custom paths: lost password, signup and disconnect
@@ -388,7 +422,7 @@ Fixed - Hide rest_route only for visitors to avoid errors with builders
 Compatibility with PHP 8.3 and WP 6.4.3
 Update - Compatibility with Hostinger
 Update - Compatibility with InstaWP
-Update - Compatibility with Solid Security Plugin (ex iThemes Security)
+Update - Compatibility with Solid Security Plugin (ex Solid Security)
 Update - Added the option to block the API call by rest_route param
 Update - Added new detectors in the option to block the Theme Detectors
 Update - Security Check for valid WP paths
@@ -628,7 +662,7 @@ Fixed - Small bugs & typos
 * Update - Compatibility with Limit Login Attempts Reloaded
 * Update - Compatibility with Loginizer
 * Update - Compatibility with Shield Security
-* Update - Compatibility with iThemes Security
+* Update - Compatibility with Solid Security
 * Update - Added compatibility with JCH Optimize 3 plugin
 * Update - Added compatibility with Oxygen 3.8 plugin
 * Update - Added compatibility with WP Bakery plugin
@@ -645,7 +679,7 @@ Fixed - Small bugs & typos
 * Update - Update compatibility with Power Cache plugin
 * Update - Update compatibility with W3 Total Cache plugin
 * Update - Update compatibility with WP Fastest Cache plugin
-* Update - Update compatibility with iThemes plugin
+* Update - Update compatibility with Solid plugin
 * Fix - Password strength error on custom login reset password
 * Fix - Remove only the wordpress prefetch from source code and not other domains
 * Fix - Plugin uninstall issue because of missing contact HMW_VERSION
@@ -741,7 +775,7 @@ Fixed - Small bugs & typos
 * Update - Added the version hook to remove the versions from CSS and JS
 * Update - Load the login on WPEngine server with PHP7.4 when the login is set as /login
 * Update - Detect Flywheel server and add the rules accordingly
-* Update - Compatibility with IThemes Security on custom login
+* Update - Compatibility with Solid Security on custom login
 
 = 4.0.08 (13 Aug 2020 ) =
 * Update - WordPress Security Updates for WP 5.5
@@ -773,7 +807,7 @@ Fixed - Small bugs & typos
 * HMW_RULES_IN_CONFIG will add the rules at the top of the config file (default true)
 * HMW_RULES_IN_WP_RULES will add the rules in the WordPress config area  (default true)
 * Update - Change the rewrite hook to make sure the rules are added in the WordPress rewrites before flushing them
-* Update - Compatibility with IThemes Security plugin
+* Update - Compatibility with Solid Security plugin
 
 
 = 4.0.03 (04 June 2020) =

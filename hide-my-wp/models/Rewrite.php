@@ -1118,7 +1118,7 @@ class HMWP_Models_Rewrite {
 
 				$query = '';
 				if ( $path <> '' ) {
-					$parsed = @parse_url( $path );
+					$parsed = @wp_parse_url( $path );
 					if ( isset( $parsed['query'] ) && $parsed['query'] <> '' ) {
 						$query = '?' . $parsed['query'];
 					}
@@ -1153,7 +1153,7 @@ class HMWP_Models_Rewrite {
 			if ( strpos( $url, 'wp-activate.php' ) !== false ) {
 				$query = '';
 				if ( $path <> '' ) {
-					$parsed = @parse_url( $path );
+					$parsed = @wp_parse_url( $path );
 					if ( isset( $parsed['query'] ) && $parsed['query'] <> '' ) {
 						$query = '?' . $parsed['query'];
 					}
@@ -1200,7 +1200,7 @@ class HMWP_Models_Rewrite {
 
 				$query = '';
 				if ( $path <> '' ) {
-					$parsed = @parse_url( $path );
+					$parsed = @wp_parse_url( $path );
 					if ( isset( $parsed['query'] ) && $parsed['query'] <> '' ) {
 						$query = '?' . $parsed['query'];
 					}
@@ -1235,7 +1235,7 @@ class HMWP_Models_Rewrite {
 			if ( strpos( $url, 'wp-activate.php' ) !== false ) {
 				$query = '';
 				if ( $path <> '' ) {
-					$parsed = @parse_url( $path );
+					$parsed = @wp_parse_url( $path );
 					if ( isset( $parsed['query'] ) && $parsed['query'] <> '' ) {
 						$query = '?' . $parsed['query'];
 					}
@@ -1649,7 +1649,7 @@ class HMWP_Models_Rewrite {
 	public function logout_url( $url, $redirect = '' ) {
 		$args = array();
 		if ( $url <> '' ) {
-			$parsed = @parse_url( $url );
+			$parsed = @wp_parse_url( $url );
 			if ( $parsed['query'] <> '' ) {
 				@parse_str( html_entity_decode( $parsed['query'] ), $args );
 			}
@@ -1827,7 +1827,7 @@ class HMWP_Models_Rewrite {
 			$redirect = apply_filters( 'hmwp_url_login_redirect', $redirect );
 
 			//If the redirect URL is external, jump to redirect
-			if ( parse_url( $redirect, PHP_URL_HOST ) && parse_url( $redirect, PHP_URL_HOST ) <> parse_url( home_url(), PHP_URL_HOST ) ) {
+			if ( wp_parse_url( $redirect, PHP_URL_HOST ) && wp_parse_url( $redirect, PHP_URL_HOST ) <> wp_parse_url( home_url(), PHP_URL_HOST ) ) {
 				wp_redirect( $redirect );
 				exit();
 			}
@@ -1891,7 +1891,7 @@ class HMWP_Models_Rewrite {
 	public function loopCheck( $url ) {
 		if ( isset( $_SERVER['HTTP_HOST'] ) && isset( $_SERVER['REQUEST_URI'] ) && $url <> '' ) {
 			$current_url  = $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-			$redirect_url = parse_url( $url, PHP_URL_HOST ) . parse_url( $url, PHP_URL_PATH );
+			$redirect_url = wp_parse_url( $url, PHP_URL_HOST ) . wp_parse_url( $url, PHP_URL_PATH );
 			if ( $current_url <> '' && $redirect_url <> '' ) {
 				if ( $current_url == $redirect_url ) {
 					return add_query_arg( array( 'nordt' => true ), $url );
@@ -2018,15 +2018,13 @@ class HMWP_Models_Rewrite {
 						if ( ! HMWP_Classes_Tools::isMultisites() && HMWP_Classes_Tools::getOption( 'hmwp_hide_newadmin' ) ) {
 							if ( strpos( $url . '/', '/' . HMWP_Classes_Tools::getOption( 'hmwp_admin_url' ) . '/' ) !== false && HMWP_Classes_Tools::getOption( 'hmwp_hide_admin' ) ) {
 								if ( strpos( $url . '/', '/' . HMWP_Classes_Tools::getOption( 'hmwp_admin-ajax_url' ) . '/' ) === false ) {
-									$this->getNotFound( $url );
+									$this->getNotFound( $url, '.' );
 								}
 							}
-						} else {
-							if ( $_SERVER['REQUEST_URI'] == site_url( HMWP_Classes_Tools::getOption( 'hmwp_admin_url' ), 'relative' ) ) {
-								wp_safe_redirect( $url . '/' );
-								exit();
-							}
-						}
+						} elseif ( $_SERVER['REQUEST_URI'] == site_url( HMWP_Classes_Tools::getOption( 'hmwp_admin_url' ), 'relative' ) ) {
+                            wp_safe_redirect( $url . '/' );
+                            exit();
+                        }
 
 						$paths = array(
 							home_url( HMWP_Classes_Tools::getDefault( 'hmwp_admin_url' ), 'relative' ),
@@ -2043,11 +2041,9 @@ class HMWP_Models_Rewrite {
 								$this->getNotFound( $url );
 							}
 						}
-					} else {
-						if ( strpos( $url, '/' . HMWP_Classes_Tools::getDefault( 'hmwp_admin_url' ) ) !== false && strpos( $url, admin_url( HMWP_Classes_Tools::getDefault( 'hmwp_admin-ajax_url' ), 'relative' ) ) === false && HMWP_Classes_Tools::getOption( 'hmwp_hide_admin' ) ) {
-							$this->getNotFound( $url );
-						}
-					}
+					} elseif ( strpos( $url, '/' . HMWP_Classes_Tools::getDefault( 'hmwp_admin_url' ) ) !== false && strpos( $url, admin_url( HMWP_Classes_Tools::getDefault( 'hmwp_admin-ajax_url' ), 'relative' ) ) === false && HMWP_Classes_Tools::getOption( 'hmwp_hide_admin' ) ) {
+                        $this->getNotFound( $url, '.' );
+                    }
 
 					/////////////////////////////////////////////////////
 					//Protect lost password and register
@@ -2226,37 +2222,46 @@ class HMWP_Models_Rewrite {
 		}
 	}
 
-	/**
-	 * Return 404 page or redirect
-	 *
-	 * @param string $url
-	 *
-	 * @throws Exception
-	 */
-	public function getNotFound( $url ) {
-		if ( HMWP_Classes_Tools::getOption( 'hmwp_url_redirect' ) == '404' ) {
-			if ( HMWP_Classes_Tools::isThemeActive( 'Pro' ) ) {
-				global $wp_query;
-				$wp_query->is_404 = true;
+    /**
+     * Return 404 page or redirect
+     *
+     * @param string $url Options: 404, NFError Not Found, NAError Not Available, or a specific page
+     * @param string $option
+     *
+     * @throws Exception
+     */
+    public function getNotFound( $url, $option = false ) {
 
-				wp_safe_redirect( home_url( '404' ) );
-			} else {
-				$this->get404Page();
-			}
-		} else if ( HMWP_Classes_Tools::getOption( 'hmwp_url_redirect' ) == 'NFError' ) {
-			$this->get404Page();
-		} else if ( HMWP_Classes_Tools::getOption( 'hmwp_url_redirect' ) == 'NAError' ) {
-			$this->get403Error();
-		} elseif ( HMWP_Classes_Tools::getOption( 'hmwp_url_redirect' ) == '.' ) {
-			//redirect to front page
-			wp_safe_redirect( home_url() );
-		} else {
-			//redirect to custom page
-			wp_safe_redirect( home_url( HMWP_Classes_Tools::getOption( 'hmwp_url_redirect' ) ) );
-		}
+        if(!$option){
+            $option = HMWP_Classes_Tools::getOption( 'hmwp_url_redirect' );
+        }
 
-		die();
-	}
+        if ( $option == '404' ) {
+            if ( HMWP_Classes_Tools::isThemeActive( 'Pro' ) ) {
+                global $wp_query;
+                $wp_query->is_404 = true;
+
+                wp_safe_redirect( home_url( '404' ) );
+                exit();
+            } else {
+                $this->get404Page();
+            }
+        } else if ( $option == 'NFError' ) {
+            $this->get404Page();
+        } else if ( $option == 'NAError' ) {
+            $this->get403Error();
+        } elseif ( $option == '.' ) {
+            //redirect to front page
+            wp_safe_redirect( home_url() );
+            exit();
+        } else {
+            //redirect to custom page
+            wp_safe_redirect( home_url( $option ) );
+            exit();
+        }
+
+        die();
+    }
 
 	/**
 	 * Display 404 page to bump bots and bad guys
@@ -2344,11 +2349,11 @@ class HMWP_Models_Rewrite {
 
 						$cdns = array_unique( $cdns ); //remove duplicates
 						foreach ( $cdns as $cdn ) {
-							$cdn = parse_url( $cdn, PHP_URL_HOST ) . parse_url( $cdn, PHP_URL_PATH ) . '/';
+							$cdn = wp_parse_url( $cdn, PHP_URL_HOST ) . wp_parse_url( $cdn, PHP_URL_PATH ) . '/';
 
 							//Add PORT if different from 80
-							if ( parse_url( $cdn, PHP_URL_PORT ) && parse_url( $cdn, PHP_URL_PORT ) <> 80 ) {
-								$cdn = parse_url( $cdn, PHP_URL_HOST ) . ':' . parse_url( $cdn, PHP_URL_PORT ) . parse_url( $cdn, PHP_URL_PATH ) . '/';
+							if ( wp_parse_url( $cdn, PHP_URL_PORT ) && wp_parse_url( $cdn, PHP_URL_PORT ) <> 80 ) {
+								$cdn = wp_parse_url( $cdn, PHP_URL_HOST ) . ':' . wp_parse_url( $cdn, PHP_URL_PORT ) . wp_parse_url( $cdn, PHP_URL_PATH ) . '/';
 							}
 
 							$findcdn    = preg_replace( '/^/', $cdn, (array) $this->_replace['from'] );
@@ -2437,7 +2442,7 @@ class HMWP_Models_Rewrite {
 	public function addMainDomainUrl( $url ) {
 
 		//Set the blog URL
-		$mainsiteurl = str_replace( 'www.', '', parse_url( site_url(), PHP_URL_HOST ) );
+		$mainsiteurl = str_replace( 'www.', '', wp_parse_url( site_url(), PHP_URL_HOST ) );
 
 		if ( strpos( $url, $mainsiteurl ) === false ) {
 			return $mainsiteurl . '/' . $url;
@@ -2585,7 +2590,10 @@ class HMWP_Models_Rewrite {
 					case 'drupal10':
 						$generator = 'Drupal 10 (https://www.drupal.org)';
 						break;
-					default:
+                    case 'drupal11':
+                        $generator = 'Drupal 11 (https://www.drupal.org)';
+                        break;
+                    default:
 						$generator = 'Drupal (https://www.drupal.org)';
 						break;
 				}
@@ -2727,12 +2735,12 @@ class HMWP_Models_Rewrite {
 		}
 
 		// return if already absolute URL
-		if ( parse_url( $rel, PHP_URL_SCHEME ) != '' ) {
+		if ( wp_parse_url( $rel, PHP_URL_SCHEME ) != '' ) {
 			return $rel;
 		}
 
 		// parse base URL  and convert to local variables: $scheme, $host,  $path
-		extract( parse_url( home_url() ) );
+		extract( wp_parse_url( home_url() ) );
 
 		//add the scheme to the URL
 		if ( strpos( $rel, "//" ) === 0 ) {

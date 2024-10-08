@@ -13,123 +13,89 @@ class HMWP_Classes_Tools
 {
 
     /**
+     * Saved options in database.
      *
-     *
-     * @var array Saved options in database
+     * @var array
      */
     public static $init = array(), $default = array(), $lite = array();
+    /**
+     * Configuration settings for the application.
+     *
+     * @var array
+     */
     public static $options = array();
+    /**
+     * Stores debugging information and configurations.
+     *
+     * @var array
+     */
     public static $debug = array();
+    /**
+     * List of active plugins in the system.
+     *
+     * @var array
+     */
     public static $active_plugins;
 
     /**
+     * Represents the role of the current user.
      *
-     *
-     * @var integer Count the errors in site
+     * @var string
      */
-    static $errors_count = 0;
-
     static $current_user_role = 'default';
 
     /**
-     * HMWP_Classes_Tools constructor.
+     * Plugin constructor to initialize options, load multilanguage support, and handle admin-specific tasks.
+     *
+     * @return void
      */
     public function __construct()
     {
 
-        /////////////////////////////////////////////////////////////
-        //Check the memory and make sure it's enough
-        //Check the max memory usage
-        $maxmemory = self::getMaxMemory();
-        if ($maxmemory && $maxmemory < 60 ) {
-            if (defined('WP_MAX_MEMORY_LIMIT') && (int)WP_MAX_MEMORY_LIMIT > 60 ) {
-                @ini_set('memory_limit', apply_filters('admin_memory_limit', WP_MAX_MEMORY_LIMIT));
-            } else {
-                define('HMWP_DISABLE', true);
-                HMWP_Classes_Error::setNotification(sprintf(esc_html__('Your memory limit is %sM. You need at least %sM to prevent loading errors in frontend. See: %sIncreasing memory allocated to PHP%s', 'hide-my-wp'), $maxmemory, 64, '<a href="https://codex.wordpress.org/Editing_wp-config.php#Increasing_memory_allocated_to_PHP" target="_blank">', '</a>'));
-            }
-        }
-        ////////////////////////////////////////////////////
-
-        //Get the plugin options from database
+        // Get the plugin options from database
         self::$options = self::getOptions();
 
-        //Load multilanguage
+        // Load multilanguage
         add_action("init", array($this, 'loadMultilanguage'));
 
-        //If it's admin panel
+        // If it's admin panel
         if(is_admin() || is_network_admin()) {
-            //Check the Plugin database update
+            // Check the Plugin database update
             self::updateDatabase();
 
-            //add setting link in plugin
+            // Add setting link in plugin
             add_filter('plugin_action_links_' . HMWP_BASENAME, array($this, 'hookActionlink'));
             add_filter('network_admin_plugin_action_links_' . HMWP_BASENAME, array($this, 'hookActionlink'));
 
-            //check plugin license
+            // Check plugin license
             add_action('request_metadata_http_result', array($this, 'checkLicenseOnUpdate'));
 
-
         }
-
-    }
-
-    /**
-     * Check the memory and make sure it's enough
-     *
-     * @return bool|string
-     */
-    public static function getMaxMemory()
-    {
-        try {
-            $memory_limit = @ini_get('memory_limit');
-            if ((int)$memory_limit > 0 ) {
-                if (preg_match('/^(\d+)(.)$/', $memory_limit, $matches) ) {
-                    if ($matches[2] == 'G' ) {
-                        $memory_limit = $matches[1] * 1024 * 1024 * 1024; // nnnM -> nnn MB
-                    } elseif ($matches[2] == 'M' ) {
-                        $memory_limit = $matches[1] * 1024 * 1024; // nnnM -> nnn MB
-                    } else if ($matches[2] == 'K' ) {
-                        $memory_limit = $matches[1] * 1024; // nnnK -> nnn KB
-                    }
-                }
-                if ((int)$memory_limit > 0 ) {
-                    return number_format((int)$memory_limit / 1024 / 1024, 0, '', '');
-                }
-            }
-        } catch ( Exception $e ) {
-        }
-
-        return false;
 
     }
 
     /**
      * Load the Options from user option table in DB
      *
-     * @param bool|false $safe
+     * @param bool $safe
      *
      * @return array
      */
     public static function getOptions( $safe = false )
     {
-        $keymeta = HMWP_OPTION;
+        // Set key metadata based on safe parameter.
+        $keymeta = $safe ? HMWP_OPTION_SAFE : HMWP_OPTION;
 
-	    $homepath = '';
-		if(parse_url(site_url(), PHP_URL_PATH)){
-			$homepath = ltrim(parse_url(site_url(), PHP_URL_PATH), '/');
-		}
+        // Parse the site URL and plugin/content paths.
+        $homepath = wp_parse_url(site_url(), PHP_URL_PATH) ? ltrim(wp_parse_url(site_url(), PHP_URL_PATH), '/') : '';
+	    $pluginurl = ltrim(wp_parse_url(plugins_url(), PHP_URL_PATH), '/');
+	    $contenturl = ltrim(wp_parse_url(content_url(), PHP_URL_PATH), '/');
 
-	    $pluginurl = ltrim(parse_url(plugins_url(), PHP_URL_PATH), '/');
-	    $contenturl = ltrim(parse_url(content_url(), PHP_URL_PATH), '/');
-
+        // Get relative paths for plugin and content URLs.
         $plugin_relative_url = trim(preg_replace('/' . str_replace('/', '\/', $homepath) . '/', '', $pluginurl, 1), '/');
         $content_relative_url = trim(preg_replace('/' . str_replace('/', '\/', $homepath) . '/', '', $contenturl, 1), '/');
 
-        if ($safe) {
-            $keymeta = HMWP_OPTION_SAFE;
-        }
-
+        // Set default options.
         self::$init = array(
             'hmwp_ver' => 0,
             //--
@@ -209,6 +175,10 @@ class HMWP_Classes_Tools
             'hmwp_brute_message' => esc_html__('Your IP has been flagged for potential security violations. Please try again in a little while...', 'hide-my-wp'),
             'hmwp_hide_classes' => json_encode(array()),
             'trusted_ip_header' => '',
+
+            //Unique Login
+            'hmwp_uniquelogin' => 0,
+            'hmwp_uniquelogin_woocommerce' => 0,
 
             //Math reCaptcha
             'brute_use_math' => 1,
@@ -301,7 +271,7 @@ class HMWP_Classes_Tools
             //--
 
             //redirects
-            'hmwp_url_redirect' => '.',
+            'hmwp_url_redirect' => 'NFError',
             'hmwp_do_redirects' => 0,
             'hmwp_logged_users_redirect' => 0,
             'hmwp_url_redirects' => array('default' => array('login' => '', 'logout' => '')),
@@ -312,6 +282,8 @@ class HMWP_Classes_Tools
             'hmwp_mapping_cdn_show' => 1,
 
         );
+
+        // Set WordPress options when security is disables.
         self::$default = array(
             'hmwp_mode' => 'default',
             'hmwp_admin_url' => 'wp-admin',
@@ -383,6 +355,8 @@ class HMWP_Classes_Tools
             'hmwp_tag_base' => '',
             //
         );
+
+        // Set options for "Lite Mode".
         self::$lite = array(
             'hmwp_mode' => 'lite',
             'hmwp_login_url' => 'newlogin',
@@ -399,6 +373,7 @@ class HMWP_Classes_Tools
             'hmwp_wp-content_url' => 'core',
             'hmwp_wp-includes_url' => 'lib',
             'hmwp_author_url' => 'writer',
+            'hmwp_hide_authors' => 1,
             'hmwp_wp-comments-post' => 'comments',
             'hmwp_themes_style' => 'design.css',
             'hmwp_wp-json' => 'wp-json',
@@ -412,7 +387,7 @@ class HMWP_Classes_Tools
             'hmwp_hide_plugins' => 1,
             'hmwp_hide_all_plugins' => 0,
             'hmwp_hide_themes' => 1,
-            'hmwp_emulate_cms' => 'drupal',
+            'hmwp_emulate_cms' => 'drupal11',
             //
             'hmwp_hide_img_classes' => 1,
             'hmwp_hide_rest_api' => 1,
@@ -429,7 +404,6 @@ class HMWP_Classes_Tools
 
             //PRO
             'hmwp_hide_styleids' => 0,
-            'hmwp_hide_authors' => 0,
             'hmwp_disable_browsing' => 0,
             'hmwp_hide_commonfiles' => 0,
             'hmwp_hide_oldpaths' => 0,
@@ -437,37 +411,38 @@ class HMWP_Classes_Tools
             'hmwp_hide_oldpaths_themes' => 0,
         );
 
+        // Fetch the options based on whether it's a multisite and merge with defaults.
         if (self::isMultisites() && defined('BLOG_ID_CURRENT_SITE') ) {
             $options = json_decode(get_blog_option(BLOG_ID_CURRENT_SITE, $keymeta), true);
         } else {
             $options = json_decode(get_option($keymeta), true);
         }
 
-        //make sure it works with WP Client plugin by default
+        // Ensure compatibility with WP Client plugin.
         if (self::isPluginActive('wp-client/wp-client.php') ) {
             self::$lite['hmwp_wp-content_url'] = 'include';
         }
 
-        //merge the option
+        // Merge the options with initial and default values.
         if (is_array($options) ) {
             $options = @array_merge(self::$init, self::$default, $options);
         } else {
             $options = @array_merge(self::$init, self::$default);
         }
 
-        //validate custom cache directory
+        // Validate the custom cache directory and reset if it contains 'wp-content'.
         if(isset($options['hmwp_change_in_cache_directory']) && $options['hmwp_change_in_cache_directory'] <> '') {
             if(strpos($options['hmwp_change_in_cache_directory'], 'wp-content') !== false) {
                 $options['hmwp_change_in_cache_directory'] = '';
             }
         }
 
-        //update the whitelist_level
+        // Update the whitelist level based on whitelist paths setting.
         if(isset($options['whitelist_paths']) && !isset($options['whitelist_level'])){
             $options['whitelist_level'] = ($options['whitelist_paths'] == 1 ? 2 : 0);
         }
 
-        //Set the categories and tags paths
+        // Set the category and tag bases considering multisite setup.
         $category_base = get_option('category_base');
         $tag_base = get_option('tag_base');
 
@@ -479,78 +454,92 @@ class HMWP_Classes_Tools
         $options['hmwp_category_base'] = $category_base;
         $options['hmwp_tag_base'] = $tag_base;
 
-	    if(HMW_PRIORITY) $options['hmwp_priorityload'] = 1;
+        // Set priority and rewrite rules settings if defined constants are set.
+        if(HMW_PRIORITY) $options['hmwp_priorityload'] = 1;
 	    if(HMW_RULES_IN_WP_RULES) $options['hmwp_rewrites_in_wp_rules'] = 1;
 
-	    return $options;
+        // Return the final options array.
+        return $options;
     }
 
     /**
-     * Update the plugin database with the last changed
+     * Update the database configuration and options for the plugin.
+     *
+     * This method is called during a plugin update to migrate existing settings and set new defaults.
+     * It handles various tasks such as upgrading from a lite version, migrating specific options,
+     * and initializing default values where necessary.
+     *
+     * @return void
      */
     private static function updateDatabase()
     {
-        //On plugin update
+        // Check if the plugin version is updated
         if(self::$options['hmwp_ver'] < HMWP_VERSION_ID ) {
 
-            //Upgrade from Lite Version
+            // Upgrade from Old Version if hmwp_options exist in the database
             if (get_option('hmw_options') ) {
                 $options = json_decode(get_option('hmw_options'), true);
+                // If options are not empty, migrate them to the new format
                 if (!empty($options) ) {
                     foreach ( $options as $key => $value ) {
                         self::$options[str_replace('hmw_', 'hmwp_', $key)] = $value;
                     }
                 }
+                // Delete old options to prevent conflicts
                 delete_option('hmw_options');
             }
 
-            //Set default hmwp_hide_wplogin
+            // Set default value for hmwp_hide_wplogin if it's not set and hmwp_hide_login is set
             if (!isset(self::$options['hmwp_hide_wplogin']) && isset(self::$options['hmwp_hide_login']) && self::$options['hmwp_hide_login'] ) {
                 self::$options['hmwp_hide_wplogin'] = self::$options['hmwp_hide_login'];
             }
 
-            //Initialize the account show option
+            // Initialize the account show option if not set
             if (!isset(self::$options['hmwp_plugin_account_show']) ) {
                 self::$options['hmwp_plugin_account_show'] = 1;
             }
 
-            //upgrade the redirects to the new redirects
+            // Upgrade logout redirect options to the new format
             if (isset(self::$options['hmwp_logout_redirect']) && self::$options['hmwp_logout_redirect']) {
                 self::$options['hmwp_url_redirects']['default']['logout'] = self::$options['hmwp_logout_redirect'];
                 unset(self::$options['hmwp_logout_redirect']);
             }
 
+            // Upgrade admin toolbar visibility option to the new format
             if (isset(self::$options['hmwp_in_dashboard']) && self::$options['hmwp_in_dashboard']) {
                 self::$options['hmwp_hide_admin_toolbar'] = self::$options['hmwp_in_dashboard'];
                 unset(self::$options['hmwp_in_dashboard']);
             }
 
+            // Upgrade sitemap visibility option to the new format
             if (isset(self::$options['hmwp_shutdownload']) && self::$options['hmwp_shutdownload']) {
                 self::$options['hmwp_hide_in_sitemap'] = self::$options['hmwp_shutdownload'];
                 unset(self::$options['hmwp_shutdownload']);
             }
 
-            //update the whitelist_level
+            // Remove old whitelist_paths option
             if(isset(self::$options['whitelist_paths'])){
                 unset(self::$options['whitelist_paths']);
             }
 
-            //update the login on Cloud when plugin update
+            // Update the login paths on Cloud when the plugin is updated
             self::sendLoginPathsApi();
 
+            // Set the current version ID
             self::$options['hmwp_ver'] = HMWP_VERSION_ID;
+            // Save updated options
             self::saveOptions();
         }
     }
 
-	/**
-	 * Get the default value
-	 *
-	 * @since 5.0.19
-	 *
-	 * @param $key
-	 * @return false|mixed
-	 */
+    /**
+     * Get the default value for a given key
+     *
+     * @param  string  $key  The key for which default value is to be retrieved
+     *
+     * @return mixed The default value associated with the key, or false if the key does not exist
+     * @since 5.0.19
+     */
 	public static function getDefault( $key )
 	{
 		if (isset(self::$default[$key]) ) {
@@ -562,11 +551,11 @@ class HMWP_Classes_Tools
 	}
 
     /**
-     * Get the option from database
+     * Retrieve an option value by key.
      *
-     * @param $key
+     * @param  string  $key  The key for the option to retrieve.
      *
-     * @return mixed
+     * @return mixed The value of the option, possibly filtered.
      */
     public static function getOption( $key )
     {
@@ -582,37 +571,47 @@ class HMWP_Classes_Tools
     }
 
     /**
-     * Save the Options in user option table in DB
+     * Save the specified options in the WordPress options table
      *
-     * @param string     $key
-     * @param string     $value
-     * @param bool|false $safe
+     * @param  string|null  $key  The key of the option to save. If null, no key will be set.
+     * @param  mixed  $value  The value of the option to save.
+     * @param  bool  $safe  Whether to save the option safely or not.
+     *
+     * @return void
      */
     public static function saveOptions( $key = null, $value = '', $safe = false )
     {
+        // Default option key
         $keymeta = HMWP_OPTION;
 
+        // Use a different option key if the $safe parameter is true
         if ($safe ) {
             $keymeta = HMWP_OPTION_SAFE;
         }
 
+        // If a specific key is provided, update the value in the options array
         if (isset($key) ) {
             self::$options[$key] = $value;
         }
 
+        // If the site is a multisite and BLOG_ID_CURRENT_SITE is defined
         if (self::isMultisites() && defined('BLOG_ID_CURRENT_SITE') ) {
+            // Update the option for the current blog in the network
             update_blog_option(BLOG_ID_CURRENT_SITE, $keymeta, json_encode(self::$options));
         } else {
+            // Otherwise, update the option normally
             update_option($keymeta, json_encode(self::$options));
         }
     }
 
     /**
-     * Save the options into backup
+     * Save the current working options into a backup storage.
+     *
+     * @return void
      */
     public static function saveOptionsBackup()
     {
-        //Save the working options into backup
+        // Save the working options into backup
         foreach ( self::$options as $key => $value ) {
             HMWP_Classes_Tools::saveOptions($key, $value, true);
         }
@@ -627,6 +626,11 @@ class HMWP_Classes_Tools
      */
     public function hookActionlink( $links )
     {
+        if(get_transient('hmwp_disable')){
+            $links[] = '<a href="' . add_query_arg( array( 'hmwp_nonce' => wp_create_nonce( 'hmwp_pause_disable' ), 'action' => 'hmwp_pause_disable' ) ) . '" class="btn btn-default btn-sm mt-3" />' . esc_html__( "Resume Security", 'hide-my-wp' ) . '</a>';
+        }else{
+            $links[] = '<a href="' . add_query_arg( array( 'hmwp_nonce' => wp_create_nonce( 'hmwp_pause_enable' ), 'action' => 'hmwp_pause_enable' ) ) . '" class="btn btn-default btn-sm mt-3" />' . esc_html__( "Pause for 5 minutes", 'hide-my-wp' ) . '</a>';
+        }
         $links[] = '<a href="' . self::getSettingsUrl() . '">' . esc_html__('Settings', 'hide-my-wp') . '</a>';
         $links[] = '<a href="https://hidemywpghost.com/hide-my-wp-pricing/" target="_blank" style="font-weight: bold;color: #007cba">' . esc_html__('Go PRO', 'hide-my-wp') . '</a>';
         return array_reverse($links);
@@ -634,7 +638,9 @@ class HMWP_Classes_Tools
 
 
     /**
-     * Load the multilanguage support from .mo
+     * Load the plugin text domain for multilanguage support.
+     *
+     * @return void
      */
     public static function loadMultilanguage()
     {
@@ -663,6 +669,20 @@ class HMWP_Classes_Tools
     public static function isAjax()
     {
         if (defined('DOING_AJAX') && DOING_AJAX ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if it's Cron call
+     *
+     * @return bool
+     */
+    public static function isCron()
+    {
+        if (defined('DOING_CRON') && DOING_CRON ) {
             return true;
         }
 
@@ -1533,6 +1553,7 @@ class HMWP_Classes_Tools
             HMWP_Classes_Tools::isPluginActive('wp-super-cache/wp-cache.php') ||
             HMWP_Classes_Tools::isPluginActive('swift-performance/performance.php') ||
             HMWP_Classes_Tools::isPluginActive('swift-performance-lite/performance.php') ||
+            HMWP_Classes_Tools::isPluginActive('nitropack/main.php') ||
             WP_CACHE);
     }
 
@@ -1668,7 +1689,7 @@ class HMWP_Classes_Tools
 		if(HMWP_Classes_Tools::isMultisites() && defined('PATH_CURRENT_SITE')){
 			$path = PATH_CURRENT_SITE;
 		}else {
-			$path = parse_url(site_url(), PHP_URL_PATH);
+			$path = wp_parse_url(site_url(), PHP_URL_PATH);
 		}
 
 		if ($path) {
@@ -1720,12 +1741,12 @@ class HMWP_Classes_Tools
 	 */
 	public static function isDifferentWPContentPath(){
 		$homepath = '';
-		if(parse_url(site_url(), PHP_URL_PATH)){
-			$homepath = ltrim(parse_url(site_url(), PHP_URL_PATH), '/');
+		if(wp_parse_url(site_url(), PHP_URL_PATH)){
+			$homepath = ltrim(wp_parse_url(site_url(), PHP_URL_PATH), '/');
 		}
 
 		if($homepath <> '/') {
-			$contenturl = ltrim(parse_url(content_url(), PHP_URL_PATH), '/');
+			$contenturl = ltrim(wp_parse_url(content_url(), PHP_URL_PATH), '/');
 
 			return (strpos($contenturl, $homepath . '/') === false);
 		}
@@ -1835,7 +1856,7 @@ class HMWP_Classes_Tools
             }
             //////////////////////////////////////////////////////////////////////////////
         } catch ( Exception $e ) {
-
+            // handle exception
         }
 
     }
@@ -2506,5 +2527,15 @@ class HMWP_Classes_Tools
         }
 
         return false;
+    }
+
+    /**
+     * Check if the Advanced Pack is installed by verifying the definition of a constant.
+     *
+     * @return bool
+     */
+    public static function isAdvancedpackInstalled()
+    {
+        return (defined('HMWPP_VERSION'));
     }
 }
