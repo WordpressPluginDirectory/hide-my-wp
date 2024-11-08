@@ -2,9 +2,9 @@
 Contributors: johndarrel
 Tags: hide,security,firewall,login,wp admin
 Requires at least: 4.6
-Tested up to: 6.6
+Tested up to: 6.7
 Requires PHP: 7.0
-Stable tag: 5.3.01
+Stable tag: 5.3.02
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -140,8 +140,10 @@ Hide My WP Ghost is packed with over 45 security features:
 > *   Brute Force Protection with Math reCaptcha
 > *   Brute Force Protection with Google reCaptcha V2
 > *   Brute Force Protection with Google reCaptcha V3
+> *   Brute Force Protection on Login
 > *   Brute Force Protection on Password Lost
 > *   Brute Force Protection on Signup
+> *   Brute Force Protection on Comment
 > *   Brute Force Protection on Woocommerce Login
 > *   Brute Force Protection shortcode [hmwp_bruteforce]
 > *   Custom attempts, timeout, message
@@ -320,13 +322,31 @@ Enjoy!
 17. New custom core paths changed with Hide My WP Ghost
 
 == Changelog ==
+= 5.3.02 (08 Nov 2024) =
+Update - Compatibility with WP 6.7
+Update - Add Brute Force for comments form in Brute Force
+Update - Translations
+Fixed - Issue when changing relative to absolute path in javascript
+Fixed - Root domain regarding multisite with subdomains
+Fixed - Compatibility with LiteSpeed CDN domains
+Fixed - Use WordPress function for all parse url
+Fixed - Activate firewall by default when Lite mode option is selected
+Fixed - Compatibility with WP Rocket background CSS loader
+Fixed - Flush changed to config file when some features are activated in Overview section
+Fixed - Clear cache for Litespeed plugin when changing is made in the Mapping section
+Fixed - Activate the Text Mapping in CSS and JS files option for hiding class names like elementor or woocommerce
+
 = 5.3.01 (07 Oct 2024) =
 Update - Added Hide My WP Advanced Pack in Plugins suggestion
 Update - Added Drupal 11 in CMS simulation
 Update - Set 404 Not Found error as default option for hidden paths
-Update - the files CSS and JS files from WP 6.6 when Clean Login is selected in Advanced > Compatibility
+Update - The files CSS and JS files from WP 6.6 when Clean Login is selected in Advanced > Compatibility
 Update - Added the option to pause the plugin for 5 minutes for testing purposes
+Update - Compatibility with WP Rocket Background CSS loader
+Update - Map Litespeed cache directory in URL Mapping
 Fixed - Redirect to homepage the newadmin when user is not logged in
+Fixed - Remove dynamic CSS and JS when Text Mapping is switched off
+Fixed - Prevent changing wp-content and wp-includes paths in deep URL location and avoid 404 errors
 
 = 5.3.00 (20 Sept 2024) =
 Update - Added New Feature Magic Link Login Without Password in Hide My WP > Overview
