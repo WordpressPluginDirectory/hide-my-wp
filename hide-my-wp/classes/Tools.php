@@ -105,10 +105,10 @@ class HMWP_Classes_Tools {
 			'hmwp_disable_name'              => HMWP_Classes_Tools::generateRandomString( 16 ),
 			//--
 			'hmwp_plugin_name'               => _HMWP_PLUGIN_FULL_NAME_,
-			'hmwp_plugin_menu'               => str_replace( ' Ghost', '', _HMWP_PLUGIN_FULL_NAME_ ),
+			'hmwp_plugin_menu'               => _HMWP_PLUGIN_FULL_NAME_,
 			'hmwp_plugin_logo'               => false,
 			'hmwp_plugin_icon'               => 'dashicons-shield-alt',
-			'hmwp_plugin_website'            => 'https://hidemywpghost.com',
+			'hmwp_plugin_website'            => 'https://wpghost.com',
 			'hmwp_plugin_account_show'       => 1,
 			//--
 			'logout'                         => 0,
@@ -165,12 +165,13 @@ class HMWP_Classes_Tools {
 
 			//-- Brute Force
 			'hmwp_bruteforce'                => 0,
-			'hmwp_bruteforce_register'       => 0,
+			'hmwp_bruteforce_login'          => 1,
 			'hmwp_bruteforce_lostpassword'   => 0,
+			'hmwp_bruteforce_register'       => 0,
 			'hmwp_bruteforce_comments'       => 0,
 			'hmwp_bruteforce_woocommerce'    => 0,
 			'hmwp_bruteforce_username'       => 0,
-			'hmwp_brute_message'             => esc_html__( 'Your IP has been flagged for potential security violations. Please try again in a little while...', 'hide-my-wp' ),
+			'hmwp_brute_message'             => esc_html__( 'Your IP has been flagged for potential security violations. Please try again in a little while.', 'hide-my-wp' ),
 			'hmwp_hide_classes'              => json_encode( array() ),
 			'trusted_ip_header'              => '',
 
@@ -182,6 +183,14 @@ class HMWP_Classes_Tools {
 			'brute_use_math'                 => 1,
 			'brute_max_attempts'             => 5,
 			'brute_max_timeout'              => 3600,
+			//reCaptcha Google
+			'brute_use_google_enterprise'    => 0,
+			'brute_use_google'               => 0,
+			'brute_google_checkbox'          => 0,
+			'brute_google_project_id'        => '',
+			'brute_google_api_key'           => '',
+			'brute_google_site_key'          => '',
+			'brute_google_language'          => '',
 			//reCaptcha V2
 			'brute_use_captcha'              => 0,
 			'brute_captcha_site_key'         => '',
@@ -629,18 +638,14 @@ class HMWP_Classes_Tools {
 	 * @return array
 	 */
 	public function hookActionlink( $links ) {
-		if ( get_transient( 'hmwp_disable' ) ) {
-			$links[] = '<a href="' . add_query_arg( array(
-					'hmwp_nonce' => wp_create_nonce( 'hmwp_pause_disable' ),
-					'action'     => 'hmwp_pause_disable'
-				) ) . '" class="btn btn-default btn-sm mt-3" />' . esc_html__( "Resume Security", 'hide-my-wp' ) . '</a>';
-		} else {
-			$links[] = '<a href="' . add_query_arg( array(
-					'hmwp_nonce' => wp_create_nonce( 'hmwp_pause_enable' ),
-					'action'     => 'hmwp_pause_enable'
-				) ) . '" class="btn btn-default btn-sm mt-3" />' . esc_html__( "Pause for 5 minutes", 'hide-my-wp' ) . '</a>';
+		if ( HMWP_Classes_Tools::userCan( HMWP_CAPABILITY ) ) {
+			if ( get_transient( 'hmwp_disable' ) ) {
+				$links[] = '<a href="' . esc_url( add_query_arg( array( 'hmwp_nonce' => wp_create_nonce( 'hmwp_pause_disable' ), 'action' => 'hmwp_pause_disable' ) ) ) . '" class="btn btn-default btn-sm mt-3" />' . esc_html__( "Resume Security", 'hide-my-wp' ) . '</a>';
+			} else {
+				$links[] = '<a href="' . esc_url( add_query_arg( array( 'hmwp_nonce' => wp_create_nonce( 'hmwp_pause_enable' ), 'action' => 'hmwp_pause_enable' ) ) ) . '" class="btn btn-default btn-sm mt-3" />' . esc_html__( "Pause for 5 minutes", 'hide-my-wp' ) . '</a>';
+			}
+			$links[] = '<a href="' . esc_url( self::getSettingsUrl() ) . '">' . esc_html__( 'Settings', 'hide-my-wp' ) . '</a>';
 		}
-		$links[] = '<a href="' . self::getSettingsUrl() . '">' . esc_html__( 'Settings', 'hide-my-wp' ) . '</a>';
 		$links[] = '<a href="https://hidemywpghost.com/hide-my-wp-pricing/" target="_blank" style="font-weight: bold;color: #007cba">' . esc_html__( 'Go PRO', 'hide-my-wp' ) . '</a>';
 
 		return array_reverse( $links );
@@ -770,7 +775,7 @@ class HMWP_Classes_Tools {
 			return false;
 		}
 
-		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+		if ( self::isCron() ) {
 			return false;
 		}
 
@@ -802,7 +807,7 @@ class HMWP_Classes_Tools {
 			return false;
 		}
 
-		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+		if ( self::isCron() ) {
 			return false;
 		}
 
@@ -840,7 +845,7 @@ class HMWP_Classes_Tools {
 			return false;
 		}
 
-		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+		if ( self::isCron() ) {
 			return false;
 		}
 
@@ -869,7 +874,7 @@ class HMWP_Classes_Tools {
 	}
 
 	public static function getCloudUrl( $page = 'login' ) {
-		return _HMWP_ACCOUNT_SITE_ . '/user/auth/' . $page;
+		return _HMWP_ACCOUNT_SITE_ . '/user/' . $page;
 	}
 
 	/**
@@ -934,16 +939,11 @@ class HMWP_Classes_Tools {
 		if ( is_string( $ret ) === true ) {
 			if ( $keep_newlines === false ) {
 				//Validate the param based on its type
-				if ( in_array( $key, array(
-					'hmwp_email_address',
-					'hmwp_email',
-					'whitelist_ip',
-					'banlist_ip'
-				) ) ) { //validate email address
-					$ret = preg_replace( '/[^A-Za-z0-9-_.#*@\/]/', '', $ret );
+				if ( in_array( $key, array( 'hmwp_email_address', 'hmwp_email', 'whitelist_ip', 'banlist_ip' ) ) ) { //validate email address
+					$ret = preg_replace( '/[^A-Za-z0-9-_.+*#:~@\!\'\/]/', '', $ret );
 				} elseif ( in_array( $key, array( 'hmwp_disable_name' ) ) ) { //validate url parameter
 					$ret = preg_replace( '/[^A-Za-z0-9-_]/', '', $ret );
-				} elseif ( in_array( $key, array( 'hmwp_admin_url', 'hmwp_login_url' ) ) ) { //validate url parameter
+				} elseif ( in_array( $key, array( 'hmwp_admin_url' ) ) ) { //validate url parameter
 					$ret = preg_replace( '/[^A-Za-z0-9-_.]/', '', $ret );
 				} else {
 					$ret = preg_replace( '/[^A-Za-z0-9-_.\/]/', '', $ret ); //validate fields
@@ -953,8 +953,8 @@ class HMWP_Classes_Tools {
 
 			} else {
 
-				//Validate the textareas
-				$ret = preg_replace( '/[^A-Za-z0-9-_.*#\n\r\s\/]@/', '', $ret );
+				//Validate the text areas
+				$ret = preg_replace( '/[^A-Za-z0-9-_.+*#:~\!\'\n\r\s\/]@/', '', $ret );
 
 				//Sanitize the textarea
 				if ( function_exists( 'sanitize_textarea_field' ) ) {
@@ -1573,18 +1573,29 @@ class HMWP_Classes_Tools {
 	 * @return array
 	 */
 	public static function getAllPlugins() {
+		// Check if the HMWP option to hide all plugins is enabled
 		if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_all_plugins' ) ) {
+			// Ensure the get_plugins() function is included before use
 			if ( ! function_exists( 'get_plugins' ) ) {
 				include_once ABSPATH . 'wp-admin/includes/plugin.php';
 			}
 
+			// Retrieve all plugin file paths from WordPress
 			$all_plugins = array_keys( get_plugins() );
 		} else {
+			// Retrieve only the active plugins from WordPress options
 			$all_plugins = (array) get_option( 'active_plugins', array() );
 		}
 
+		// Check if WordPress is running as a multisite
 		if ( self::isMultisites() ) {
+			// Merge active plugins with any sitewide active plugins
 			$all_plugins = array_merge( array_values( $all_plugins ), array_keys( get_site_option( 'active_sitewide_plugins' ) ) );
+		}
+
+		// Remove duplicate entries from the plugins array
+		if ( ! empty( $all_plugins ) ) {
+			$all_plugins = array_unique( $all_plugins );
 		}
 
 		return $all_plugins;
@@ -1600,37 +1611,59 @@ class HMWP_Classes_Tools {
 	}
 
 	/**
-	 * Get the absolute filesystem path to the root of the WordPress installation
+	 * Get the absolute filesystem path to the config root of the WordPress installation
 	 *
 	 * @return string Full filesystem path to the root of the WordPress installation
 	 */
 	public static function getRootPath() {
-		$root_path = ABSPATH;
 
-		if ( defined( '_HMWP_CONFIGPATH' ) ) {
-			$root_path = _HMWP_CONFIGPATH;
+		// Get the absolute path by default
+		$root_path = str_replace( '\\', '/', ABSPATH );
+
+		if ( _HMWP_CONFIG_DIR_ ) {
+
+			// If it's defined by the user in wp-config.php
+			$root_path = str_replace( '\\', '/', _HMWP_CONFIG_DIR_ );
+
+		} elseif ( HMWP_Classes_Tools::isMultisites() ) {
+
+			// Check the abs root path in case of multisite
+			// If the config is not present in the absolute path, go back a level
+			if ( ! file_exists( ABSPATH . 'wp-config.php' ) && file_exists( dirname( ABSPATH ) . '/wp-config.php' ) ) {
+				$root_path = dirname( $root_path );
+			}
+
 		} elseif ( self::isFlywheel() && defined( 'WP_CONTENT_DIR' ) && dirname( WP_CONTENT_DIR ) ) {
-			$root_path = str_replace( '\\', '/', dirname( WP_CONTENT_DIR ) ) . '/';
+
+			// If is Flywheel server and the content dir is defined
+			$root_path = str_replace( '\\', '/', dirname( WP_CONTENT_DIR ) );
+
 		}
 
-		return apply_filters( 'hmwp_root_path', $root_path );
+		// Let third party to modify the config root path
+		return apply_filters( 'hmwp_root_path', trailingslashit( $root_path ) );
 
 	}
 
 	/**
-	 * Get the absolute filesystem path to the root of the WordPress installation
+	 * Get the relative path to the home root of the WordPress installation
 	 *
 	 * @return string Full filesystem path to the root of the WordPress installation
 	 */
 	public static function getHomeRootPath() {
 		$home_root = '/';
+
+		// If it's multisite amd the main site path is defined
 		if ( HMWP_Classes_Tools::isMultisites() && defined( 'PATH_CURRENT_SITE' ) ) {
+			// Set the home root path as the main website
 			$path = PATH_CURRENT_SITE;
 		} else {
+			// Set the home root path from the site url
 			$path = wp_parse_url( site_url(), PHP_URL_PATH );
 		}
 
 		if ( $path ) {
+			// If there is a sub-path ...
 			$home_root = trailingslashit( $path );
 		}
 
@@ -1715,9 +1748,6 @@ class HMWP_Classes_Tools {
 				\JchOptimize\Platform\Cache::deleteCache();
 			}
 
-			if ( class_exists( 'LiteSpeed_Cache_API' ) && method_exists( 'LiteSpeed_Cache_API', 'purge_all' ) ) {
-				\LiteSpeed_Cache_API::purge_all();
-			}
 			//////////////////////////////////////////////////////////////////////////////
 			if ( function_exists( 'w3tc_pgcache_flush' ) ) {
 				w3tc_pgcache_flush();
@@ -1757,11 +1787,6 @@ class HMWP_Classes_Tools {
 				Cache_Enabler_Disk::clear_cache();
 			}
 			//////////////////////////////////////////////////////////////////////////////
-
-			if ( class_exists( 'LiteSpeed_Cache' ) ) {
-				LiteSpeed_Cache::get_instance()->purge_all();
-			}
-
 			if ( self::isPluginActive( 'litespeed-cache/litespeed-cache.php' ) ) {
 				header( "X-LiteSpeed-Purge: *" );
 			}
@@ -1846,15 +1871,12 @@ class HMWP_Classes_Tools {
 			self::saveOptions( $key, $value );
 		}
 
-		//remove user capability
-		HMWP_Classes_ObjController::getClass( 'HMWP_Models_RoleManager' )->removeHMWPCaps();
-
 		//remove the custom rules
 		HMWP_Classes_ObjController::getClass( 'HMWP_Models_Rules' )->writeToFile( '', 'HMWP_VULNERABILITY' );
 		HMWP_Classes_ObjController::getClass( 'HMWP_Models_Rules' )->writeToFile( '', 'HMWP_RULES' );
 
 		//clear the locked ips
-		HMWP_Classes_ObjController::getClass( 'HMWP_Controllers_Brute' )->clearBlockedIPs();
+		HMWP_Classes_ObjController::getClass( 'HMWP_Models_Bruteforce_Database' )->clearBlockedIPs();
 
 		//Build the redirect table
 		HMWP_Classes_ObjController::getClass( 'HMWP_Models_Rewrite' )->flushChanges();
@@ -2261,7 +2283,7 @@ class HMWP_Classes_Tools {
 	}
 
 	/**
-	 * make hidemywp the first plugin that loads
+	 * make this plugin the first plugin that loads
 	 */
 	public static function movePluginFirst() {
 		//Make sure the plugin is loaded first
@@ -2325,6 +2347,16 @@ class HMWP_Classes_Tools {
 		if ( filter_var( $domain, FILTER_VALIDATE_URL ) !== false && strpos( $domain, '.' ) !== false ) {
 			if ( ! self::isLocalFlywheel() ) {
 				$wl_jetpack[] = '127.0.0.1';
+
+				//set local domain IP
+				if ( HMWP_Classes_Tools::getOption( 'hmwp_disable_rest_api' ) ) {
+					if( $local_ip = get_transient('hmwp_local_ip') ){
+						$wl_jetpack[] = $local_ip;
+					}elseif( $local_ip = @gethostbyname( wp_parse_url($domain, PHP_URL_HOST) ) ) {
+						set_transient( 'hmwp_local_ip', $local_ip );
+						$wl_jetpack[] = $local_ip;
+					}
+				}
 			}
 		}
 

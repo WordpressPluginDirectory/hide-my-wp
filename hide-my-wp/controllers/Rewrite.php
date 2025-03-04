@@ -25,7 +25,7 @@ class HMWP_Controllers_Rewrite extends HMWP_Classes_FrontController {
 		}
 
 		// If doing cron, return
-		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+		if ( HMWP_Classes_Tools::isCron() ) {
 			return;
 		}
 
@@ -69,7 +69,7 @@ class HMWP_Controllers_Rewrite extends HMWP_Classes_FrontController {
 		if ( HMWP_Classes_Tools::getIsset( HMWP_Classes_Tools::getOption( 'hmwp_disable_name' ) ) ) {
 			if ( HMWP_Classes_Tools::getValue( HMWP_Classes_Tools::getOption( 'hmwp_disable_name' ) ) == HMWP_Classes_Tools::getOption( 'hmwp_disable' ) ) {
 
-				HMWP_Classes_ObjController::getClass( 'HMWP_Controllers_Brute' )->clearBlockedIPs();
+				HMWP_Classes_ObjController::getClass( 'HMWP_Models_Bruteforce_Database' )->clearBlockedIPs();
 				HMWP_Classes_Tools::saveOptions( 'banlist_ip', json_encode( array() ) );
 
 				add_filter( 'site_url', array( $this->model, 'site_url' ), PHP_INT_MAX, 2 );
@@ -139,12 +139,14 @@ class HMWP_Controllers_Rewrite extends HMWP_Classes_FrontController {
 		add_action( 'wp_logout', array( $this->model, 'wp_logout' ), PHP_INT_MAX );
 		add_action( 'check_admin_referer', array( $this->model, 'check_admin_referer' ), PHP_INT_MAX, 2 );
 		// Change the admin url and login url
+		if( empty( (array) HMWP_Classes_Tools::getOption( 'file_mappings' ) ) ) {
+			add_filter( 'admin_url', array( $this->model, 'admin_url' ), PHP_INT_MAX, 3 );
+		}
 		add_filter( 'lostpassword_url', array( $this->model, 'lostpassword_url' ), PHP_INT_MAX, 1 );
 		add_filter( 'login_title', array( $this->model, 'login_title' ), PHP_INT_MAX, 1 );
 		add_filter( 'register', array( $this->model, 'register_url' ), PHP_INT_MAX, 1 );
 		add_filter( 'login_url', array( $this->model, 'login_url' ), PHP_INT_MAX, 1 );
 		add_filter( 'logout_url', array( $this->model, 'logout_url' ), PHP_INT_MAX, 2 );
-		add_filter( 'admin_url', array( $this->model, 'admin_url' ), PHP_INT_MAX, 3 );
 		add_filter( 'network_admin_url', array( $this->model, 'network_admin_url' ), PHP_INT_MAX, 3 );
 		add_filter( 'site_url', array( $this->model, 'site_url' ), PHP_INT_MAX, 2 );
 		add_filter( 'network_site_url', array( $this->model, 'site_url' ), PHP_INT_MAX, 3 );
@@ -187,10 +189,49 @@ class HMWP_Controllers_Rewrite extends HMWP_Classes_FrontController {
 				add_action( 'get_site_icon_url', array( $this->model, 'find_replace_url' ) );
 			}
 
+			// Hide WP version
+			if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_version' ) ) {
+				add_filter( 'get_the_generator_atom', '__return_empty_string', 99, 2 );
+				add_filter( 'get_the_generator_comment', '__return_empty_string', 99, 2 );
+				add_filter( 'get_the_generator_export', '__return_empty_string', 99, 2 );
+				add_filter( 'get_the_generator_html', '__return_empty_string', 99, 2 );
+				add_filter( 'get_the_generator_rdf', '__return_empty_string', 99, 2 );
+				add_filter( 'get_the_generator_rss2', '__return_empty_string', 99, 2 );
+				add_filter( 'get_the_generator_xhtml', '__return_empty_string', 99, 2 );
+			}
+
 			// Check the buffer on shutdown
 			if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_in_sitemap' ) && isset( $_SERVER['REQUEST_URI'] ) ) {
+
+				// remove sitemap providers
+				if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_author_in_sitemap' ) ) {
+					add_filter('wp_sitemaps_add_provider', function($provider, $name) {
+						if ($name === 'users') {
+							return false;
+						}
+						return $provider;
+					}, 99, 2);
+				}
+
 				// Check the buffer on shutdown
 				add_action( 'shutdown', array( $this->model, 'findReplaceXML' ), 0 ); //priority 0 is important
+			}
+
+			// Hide authors and users identification from website
+			if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_authors' ) ) {
+
+				// Remove users from oembed
+				add_filter('oembed_response_data', function ($data, $post, $width, $height) {
+					unset($data['author_name']);
+					unset($data['author_url']);
+					return $data;
+				}, 99, 4);
+
+				// Remove users from Rest API call
+				add_filter('rest_endpoints', array( $this->model, 'hideRestUsers' ), 99);
+
+				// Remove user list from sitemaps
+				add_filter( 'wp_sitemaps_users_pre_url_list', '__return_false', 99, 0 );
 			}
 
 			// Robots.txt compatibility with other plugins
@@ -403,7 +444,6 @@ class HMWP_Controllers_Rewrite extends HMWP_Classes_FrontController {
 			// If not frontend preview/testing
 
 			if ( (HMWP_Classes_Tools::getOption( 'hmwp_mapping_text_show' ) && HMWP_Classes_Tools::getOption( 'hmwp_mapping_file' )) || count( (array) HMWP_Classes_Tools::getOption( 'file_mappings' ) ) > 0 ) {
-
 				// Load MappingFile Check the Mapping Files
 				// Check the mapping file in case of config issues or missing rewrites
 				HMWP_Classes_ObjController::getClass( 'HMWP_Models_Files' )->maybeShowFile();
@@ -412,10 +452,7 @@ class HMWP_Controllers_Rewrite extends HMWP_Classes_FrontController {
 
 			// In case of broken URL, try to load it
 			// Priority 1 is working for broken files
-			add_action( 'template_redirect', array(
-				HMWP_Classes_ObjController::getClass( 'HMWP_Models_Files' ),
-				'maybeShowNotFound'
-			), 1 );
+			add_action( 'template_redirect', array( HMWP_Classes_ObjController::getClass( 'HMWP_Models_Files' ), 'maybeShowNotFound' ), 1 );
 
 		}
 
@@ -448,7 +485,7 @@ class HMWP_Controllers_Rewrite extends HMWP_Classes_FrontController {
 	public function hookInit() {
 
 		// If the user changes the Permalink to default ... prevent errors
-		if ( HMWP_Classes_Tools::userCan( 'hmwp_manage_settings' ) && HMWP_Classes_Tools::getValue( 'settings-updated' ) ) {
+		if ( HMWP_Classes_Tools::userCan( HMWP_CAPABILITY ) && HMWP_Classes_Tools::getValue( 'settings-updated' ) ) {
 			if ( 'default' <> HMWP_Classes_Tools::getOption( 'hmwp_mode' ) ) {
 				$this->model->flushChanges();
 			}

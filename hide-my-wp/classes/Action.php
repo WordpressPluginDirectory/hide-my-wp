@@ -91,6 +91,7 @@ class HMWP_Classes_Action extends HMWP_Classes_FrontController {
 						"hmwp_advanced_install",
 						"hmwp_pause_enable",
 						"hmwp_pause_disable",
+						"hmwp_update_product_name",
 					)
 				),
 			),
@@ -120,6 +121,7 @@ class HMWP_Classes_Action extends HMWP_Classes_FrontController {
 				"actions" => array(
 					"action" => array(
 						"hmwp_brutesettings",
+						"hmwp_google_enterprise",
 						"hmwp_blockedips",
 						"hmwp_deleteip",
 						"hmwp_deleteallips"

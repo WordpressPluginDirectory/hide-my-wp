@@ -225,6 +225,12 @@ class HMWP_Models_Settings {
 		//Save the option values
 		foreach ( $params as $key => $value ) {
 			if ( in_array( $key, array_keys( HMWP_Classes_Tools::$options ) ) ) {
+
+				// Don't save these keys as they are handled later
+				if ( in_array( $key, array('whitelist_ip', 'whitelist_urls',  'banlist_ip', 'banlist_hostname', 'banlist_user_agent', 'banlist_referrer', 'hmwp_geoblock_urls') ) ){
+					continue;
+				}
+
 				//Make sure is set in POST
 				if ( HMWP_Classes_Tools::getIsset( $key ) ) {
 					//sanitize the value first
@@ -282,9 +288,6 @@ class HMWP_Models_Settings {
 		if ( ! HMWP_Classes_Tools::isIIS() ) {
 			//For Nginx and Apache the rules can be inserted separately
 			$rules = HMWP_Classes_ObjController::getClass( 'HMWP_Models_Rules' )->getInjectionRewrite();
-			if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_oldpaths' ) || HMWP_Classes_Tools::getOption( 'hmwp_hide_commonfiles' ) ) {
-				$rules .= HMWP_Classes_ObjController::getClass( 'HMWP_Models_Rules' )->getHideOldPathRewrite();
-			}
 
 			if ( strlen( $rules ) > 1 ) {
 				if ( ! HMWP_Classes_ObjController::getClass( 'HMWP_Models_Rules' )->writeToFile( $rules, 'HMWP_VULNERABILITY' ) ) {
@@ -329,8 +332,8 @@ class HMWP_Models_Settings {
 
 			if ( $hmwp_text_mapping_from[ $index ] <> '' && $hmwp_text_mapping_to[ $index ] <> '' ) {
 
-				$hmwp_text_mapping_from[ $index ] = preg_replace( '/[^A-Za-z0-9-_.{}\/]/', '', $hmwp_text_mapping_from[ $index ] );
-				$hmwp_text_mapping_to[ $index ]   = preg_replace( '/[^A-Za-z0-9-_.{}\/]/', '', $hmwp_text_mapping_to[ $index ] );
+				$hmwp_text_mapping_from[ $index ] = preg_replace( '/[^A-Za-z0-9-_.+*#:~{}\!\s\/]/', '', $hmwp_text_mapping_from[ $index ] );
+				$hmwp_text_mapping_to[ $index ]   = preg_replace( '/[^A-Za-z0-9-_.+*#:~{}\!\s\/]/', '', $hmwp_text_mapping_to[ $index ] );
 
 				//check for invalid names
 				if ( $this->checkValidName( 'hmwp_text_mapping', $hmwp_text_mapping_from[ $index ] ) && $this->checkValidName( 'hmwp_text_mapping', $hmwp_text_mapping_to[ $index ] ) ) {
@@ -344,13 +347,8 @@ class HMWP_Models_Settings {
 						}
 
 						if ( ! HMW_DYNAMIC_FILES && ! HMWP_Classes_Tools::getOption( 'hmwp_mapping_file' ) ) {
-							if ( in_array( $hmwp_text_mapping_from[ $index ], array(
-								'elementor',
-								'wp-block',
-								'woocommerce',
-								'bricks'
-							) ) ) {
-								HMWP_Classes_Error::setNotification( sprintf( esc_html__( 'Global class name detected: %s. Read this article first: %s' ), '<strong>' . $hmwp_text_mapping_from[ $index ] . '</strong>', '<a href="' . esc_url( HMWP_Classes_Tools::getOption( 'hmwp_plugin_website' ) . '/hiding-plugins-like-woocommerce-and-elementor/' ) . '" target="_blank">Hiding plugins like WooCommerce and Elementor</a>' ) );
+							if ( in_array( $hmwp_text_mapping_from[ $index ], array( 'elementor', 'wp-block', 'woocommerce', 'bricks' ) ) ) {
+								HMWP_Classes_Error::setNotification( sprintf( esc_html__( 'Global class name detected: %s. Read this article first: %s' ), '<strong>' . $hmwp_text_mapping_from[ $index ] . '</strong>', '<a href="' . esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/hiding-plugins-like-woocommerce-and-elementor/' ) . '" target="_blank">Hiding plugins like WooCommerce and Elementor</a>' ) );
 							}
 						}
 

@@ -70,6 +70,7 @@ class HMWP_Models_Compatibility {
 			'hcaptcha-for-forms-and-more/hcaptcha.php'                                      => 'HMWP_Models_Compatibility_hCaptcha',
 			'mainwp-child/mainwp-child.php'                                                 => 'HMWP_Models_Compatibility_MainWP',
 			'userswp/userswp.php'                                                           => 'HMWP_Models_Compatibility_UsersWP',
+			'litespeed-cache/litespeed-cache.php'                                           => 'HMWP_Models_Compatibility_LiteSpeed',
 		);
 
 		try {
@@ -270,8 +271,15 @@ class HMWP_Models_Compatibility {
 
 		// Change the paths in the cached css
 		if ( HMWP_Classes_Tools::isPluginActive( 'litespeed-cache/litespeed-cache.php' ) ) {
-			// Set the cache directory for this plugin
+
+			//Set the cache directory for this plugin
 			$path = $content_dir . 'litespeed/';
+
+			//if set by the plugin, them select the defined folder
+			if( defined('LITESPEED_DATA_FOLDER') && LITESPEED_DATA_FOLDER <> ''){
+				$path = $content_dir . LITESPEED_DATA_FOLDER . '/';
+			}
+
 			if ( $wp_filesystem->is_dir( $path ) ) {
 				HMWP_Classes_ObjController::getClass( 'HMWP_Models_Cache' )->setCachePath( $path );
 
@@ -588,6 +596,12 @@ class HMWP_Models_Compatibility {
 			HMWP_Classes_Error::setNotification( sprintf( esc_html__( 'First, you need to activate the %sLite Mode%s in %s', 'hide-my-wp' ), '<a href="' . HMWP_Classes_Tools::getSettingsUrl( 'hmwp_permalinks' ) . '"><strong>', '</strong></a>', '<strong>' . HMWP_Classes_Tools::getOption( 'hmwp_plugin_name' ) . '</strong>' ) );
 		}
 
+		// Announce the plugin name change
+		if( HMWP_Classes_Tools::getOption('hmwp_plugin_name') == 'Hide My WP Ghost' && $page == 'hmwp_settings' ){
+			$link = '<a href="' . esc_url(add_query_arg( array( 'hmwp_nonce' => wp_create_nonce( 'hmwp_update_product_name' ), 'action' => 'hmwp_update_product_name' ) )) . '" class="btn btn-default btn-small py-1 ml-2" style="font-size: 14px;" />' . esc_html__( "Update Now", 'hide-my-wp' ) . '</a>';
+			HMWP_Classes_Error::setNotification( sprintf( esc_html( '%s Good News! %s You can now update the plugin name from %s Hide My WP Ghost %s to %s WP Ghost %s on your website! %s' ), '<strong>', '</strong>', '<strong>', '</strong>', '<strong>', '</strong>', $link ));
+		}
+
 		// Is CDN plugin installed
 		if ( is_admin() || is_network_admin() ) {
 			if ( HMWP_Classes_Tools::isPluginActive( 'cdn-enabler/cdn-enabler.php' ) ) {
@@ -603,7 +617,7 @@ class HMWP_Models_Compatibility {
 				}
 
 				if ( isset( $_SERVER['REQUEST_URI'] ) && admin_url( 'options-general.php?page=cdn_enabler', 'relative' ) == $_SERVER['REQUEST_URI'] ) {
-					HMWP_Classes_Error::setNotification( sprintf( esc_html__( "CDN Enabler detected! Learn how to configure it with %s %sClick here%s", 'hide-my-wp' ), HMWP_Classes_Tools::getOption( 'hmwp_plugin_name' ), '<a href="' . HMWP_Classes_Tools::getOption( 'hmwp_plugin_website' ) . '/hide-my-wp-and-cdn-enabler/" target="_blank">', '</a>' ) );
+					HMWP_Classes_Error::setNotification( sprintf( esc_html__( "CDN Enabler detected! Learn how to configure it with %s %sClick here%s", 'hide-my-wp' ), HMWP_Classes_Tools::getOption( 'hmwp_plugin_name' ), '<a href="' . esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/hide-my-wp-and-cdn-enabler/' ) . '" target="_blank">', '</a>' ) );
 				}
 			}
 
@@ -645,12 +659,12 @@ class HMWP_Models_Compatibility {
 
 			// Inmotion server detected
 			if ( HMWP_Classes_Tools::isInmotion() ) {
-				HMWP_Classes_Error::setNotification( sprintf( esc_html__( 'Inmotion detected. %sPlease read how to make the plugin compatible with Inmotion Nginx Cache%s', 'hide-my-wp' ), '<a href="' . HMWP_Classes_Tools::getOption( 'hmwp_plugin_website' ) . '/hide-my-wp-pro-compatible-with-inmotion-wordpress-hosting/" target="_blank">', '</a>' ) );
+				HMWP_Classes_Error::setNotification( sprintf( esc_html__( 'Inmotion detected. %sPlease read how to make the plugin compatible with Inmotion Nginx Cache%s', 'hide-my-wp' ), '<a href="' . esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/hide-my-wp-pro-compatible-with-inmotion-wordpress-hosting/' ) . '" target="_blank">', '</a>' ) );
 			}
 
 			// Bitnami server detected
 			if ( HMWP_Classes_Tools::isAWS() ) {
-				HMWP_Classes_Error::setNotification( sprintf( esc_html__( 'Bitnami detected. %sPlease read how to make the plugin compatible with AWS hosting%s', 'hide-my-wp' ), '<a href="' . HMWP_Classes_Tools::getOption( 'hmwp_plugin_website' ) . '/how-to-set-hide-my-wp-for-bitnami-servers/" target="_blank">', '</a>' ) );
+				HMWP_Classes_Error::setNotification( sprintf( esc_html__( 'Bitnami detected. %sPlease read how to make the plugin compatible with AWS hosting%s', 'hide-my-wp' ), '<a href="' . esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/how-to-set-hide-my-wp-for-bitnami-servers/' ) . '" target="_blank">', '</a>' ) );
 			}
 
 			// The login path is changed by other plugins and may affect the functionality
@@ -699,15 +713,9 @@ class HMWP_Models_Compatibility {
 				}
 			}
 
-			// Show the option to change in cache files
-			if ( HMWP_Classes_Tools::getOption( 'hmwp_mode' ) <> 'default' && ! HMWP_Classes_Tools::getOption( 'test_frontend' ) && HMWP_Classes_Tools::isCachePlugin() && ! HMWP_Classes_Tools::getOption( 'hmwp_change_in_cache' ) ) {
-				HMWP_Classes_Error::setNotification( sprintf( esc_html__( "To change the paths in the cached files, switch on %s Change Paths in Cached Files%s", 'hide-my-wp' ), '<strong><a href="' . HMWP_Classes_Tools::getOption( 'hmwp_plugin_website' ) . '/kb/activate-security-tweaks/#change_paths_cached_files" target="_blank">', '</a></strong>' ) );
-			}
-
-
 			// Godaddy server detected
 			if ( HMWP_Classes_Tools::isGodaddy() ) {
-				HMWP_Classes_Error::setNotification( sprintf( esc_html__( "Godaddy detected! To avoid CSS errors, make sure you switch off the CDN from %s", 'hide-my-wp' ), '<strong>' . '<a href="' . HMWP_Classes_Tools::getOption( 'hmwp_plugin_website' ) . '/how-to-use-hide-my-wp-with-godaddy/" target="_blank"> Godaddy > Managed WordPress > Overview</a>' . '</strong>' ) );
+				HMWP_Classes_Error::setNotification( sprintf( esc_html__( "Godaddy detected! To avoid CSS errors, make sure you switch off the CDN from %s", 'hide-my-wp' ), '<strong>' . '<a href="' . esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/how-to-use-hide-my-wp-with-godaddy/' ) . '" target="_blank"> Godaddy > Managed WordPress > Overview</a>' . '</strong>' ) );
 			}
 
 			// BulletProof plugin detected
@@ -723,11 +731,8 @@ class HMWP_Models_Compatibility {
 			// Check if the rules are working as expected
 			$mappings = HMWP_Classes_Tools::getOption( 'file_mappings' );
 			if ( ! empty( $mappings ) ) {
-				$restoreLink = '<br /><a href="' . add_query_arg( array(
-						'hmwp_nonce' => wp_create_nonce( 'hmwp_ignore_errors' ),
-						'action'     => 'hmwp_ignore_errors'
-					) ) . '" class="btn btn-default btn-sm mt-3" />' . esc_html__( "Close Error", 'hide-my-wp' ) . '</a>';
-				HMWP_Classes_Error::setNotification( sprintf( esc_html__( 'Attention! Some URLs passed through the config file rules and were loaded through WordPress rewrite which may slow down your website. %s Please follow this tutorial to fix the issue: %s', 'hide-my-wp' ), '<br /><br />' . join( '<br />', $mappings ) . '<br /><br />', '<a href="' . HMWP_Classes_Tools::getOption( 'hmwp_plugin_website' ) . '/kb/when-the-website-loads-slower-with-hide-my-wp-ghost/" target="_blank" class="text-warning">' . HMWP_Classes_Tools::getOption( 'hmwp_plugin_website' ) . '/kb/when-the-website-loads-slower-with-hide-my-wp-ghost/</a> ' . $restoreLink ), 'text-white bg-danger' );
+				$restoreLink = '<br /><a href="' . esc_url( add_query_arg( array( 'hmwp_nonce' => wp_create_nonce( 'hmwp_ignore_errors' ), 'action'     => 'hmwp_ignore_errors' ) ) ) . '" class="btn btn-default btn-sm mt-3" />' . esc_html__( "Close Error", 'hide-my-wp' ) . '</a>';
+				HMWP_Classes_Error::setNotification( sprintf( esc_html__( 'Attention! Some URLs passed through the config file rules and were loaded through WordPress rewrite which may slow down your website. %s Please follow this tutorial to fix the issue: %s', 'hide-my-wp' ), '<br /><br />' . join( '<br />', $mappings ) . '<br /><br />', '<a href="' . esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/theme-not-loading-correctly-website-loads-slower/' ) . '" target="_blank" class="text-warning">' . esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/theme-not-loading-correctly-website-loads-slower/' ) . '</a> ' . $restoreLink ), 'text-white bg-danger' );
 			}
 
 			if ( HMWP_Classes_Tools::isPluginActive( 'ultimate-member/ultimate-member.php' ) && HMWP_Classes_Tools::getOption( 'hmwp_bruteforce' ) && HMWP_Classes_Tools::getOption( 'brute_use_captcha_v3' ) ) {
@@ -749,7 +754,7 @@ class HMWP_Models_Compatibility {
 	 * @return array|false
 	 */
 	public function findCDNServers() {
-		$domains = array();
+		$cdn_urls = array();
 
 		//If WP_CONTENT_URL is set as a different domain
 		if ( defined( 'WP_CONTENT_URL' ) && WP_CONTENT_URL <> '' ) {
@@ -757,7 +762,7 @@ class HMWP_Models_Compatibility {
 			$domain = wp_parse_url( home_url(), PHP_URL_HOST );
 
 			if ( $cdn <> '' && $domain <> '' && $cdn <> $domain ) {
-				$domains[] = $cdn;
+				$cdn_urls[] = WP_CONTENT_URL;
 			}
 		}
 
@@ -770,7 +775,7 @@ class HMWP_Models_Compatibility {
 				$_urls = array_map( 'trim', $_urls );
 
 				foreach ( $_urls as $url ) {
-					$domains[] = $url;
+					$cdn_urls[] = $url;
 				}
 			}
 		}
@@ -780,9 +785,7 @@ class HMWP_Models_Compatibility {
 			if ( $cdn_enabler = get_option( 'cdn_enabler' ) ) {
 				if ( isset( $cdn_enabler['url'] ) ) {
 					$url = $cdn_enabler['url'];
-					if($url = wp_parse_url( $url, PHP_URL_HOST )){
-						$domains[] = $url;
-					}
+					$cdn_urls[] = $url;
 				}
 			}
 		}
@@ -795,7 +798,7 @@ class HMWP_Models_Compatibility {
 				if ( ! empty( $hostnames ) ) {
 					foreach ( $hostnames as $host ) {
 						if ( ! empty( $host ) ) {
-							$domains[] = $host;
+							$cdn_urls[] = $host;
 						}
 					}
 				}
@@ -806,9 +809,7 @@ class HMWP_Models_Compatibility {
 		if ( HMWP_Classes_Tools::isPluginActive( 'wp-super-cache/wp-cache.php' ) ) {
 			if ( get_option( 'ossdl_off_cdn_url' ) <> '' && get_option( 'ossdl_off_cdn_url' ) <> home_url() ) {
 				$url = get_option( 'ossdl_off_cdn_url' );
-				if($url = wp_parse_url( $url, PHP_URL_HOST )){
-					$domains[] = $url;
-				}
+				$cdn_urls[] = $url;
 			}
 		}
 
@@ -816,7 +817,7 @@ class HMWP_Models_Compatibility {
 		if ( HMWP_Classes_Tools::isPluginActive( 'ewww-image-optimizer/ewww-image-optimizer.php' ) ) {
 			$domain = get_option( 'ewww_image_optimizer_exactdn_domain', false );
 			if ( $domain ) {
-				$domains[] = $domain;
+				$cdn_urls[] = $domain;
 			}
 		}
 
@@ -825,19 +826,8 @@ class HMWP_Models_Compatibility {
 			if ( $jch = get_option( 'jch_options' ) ) {
 				if ( is_array( $jch ) ) {
 					if ( isset( $jch['cookielessdomain_enable'] ) && $jch['cookielessdomain_enable'] && isset( $jch['cookielessdomain'] ) && $jch['cookielessdomain'] <> '' ) {
-						$domains[] = $jch['cookielessdomain'];
+						$cdn_urls[] = $jch['cookielessdomain'];
 					}
-				}
-			}
-		}
-
-
-		//get Hide My WP CDN list
-		$hmwp_cdn_urls = json_decode( HMWP_Classes_Tools::getOption( 'hmwp_cdn_urls' ), true );
-		if ( ! empty( $hmwp_cdn_urls ) ) {
-			foreach ( $hmwp_cdn_urls as $url ) {
-				if($url = wp_parse_url( $url, PHP_URL_HOST )){
-					$domains[] = $url;
 				}
 			}
 		}
@@ -847,9 +837,7 @@ class HMWP_Models_Compatibility {
 			if ( $cdn = get_option( 'hyper-cache' ) ) {
 				if ( isset( $cdn['cdn_enabled'] ) && $cdn['cdn_enabled'] && isset( $cdn['cdn_url'] ) && $cdn['cdn_url'] ) {
 					$url = $cdn['cdn_url'];
-					if($url = wp_parse_url( $url, PHP_URL_HOST )){
-						$domains[] = $url;
-					}
+					$cdn_urls[] = $url;
 				}
 			}
 		}
@@ -858,14 +846,21 @@ class HMWP_Models_Compatibility {
 		if ( HMWP_Classes_Tools::isPluginActive( 'bunnycdn/bunnycdn.php' ) ) {
 			if ( $bunnycdn = get_option( 'bunnycdn' ) ) {
 				if ( isset( $bunnycdn['cdn_domain_name'] ) && $bunnycdn['cdn_domain_name'] ) {
-					$domains[] = $bunnycdn['cdn_domain_name'];
+					$cdn_urls[] = $bunnycdn['cdn_domain_name'];
 				}
 			}
 		}
 
+		//get plugin DB CDN list
+		$hmwp_cdn_urls = json_decode( HMWP_Classes_Tools::getOption( 'hmwp_cdn_urls' ), true );
+		if ( ! empty( $hmwp_cdn_urls ) ) {
+			foreach ( $hmwp_cdn_urls as $url ) {
+				$cdn_urls[] = $url;
+			}
+		}
 
-		if ( ! empty( $domains ) ) {
-			return array_unique( $domains );
+		if ( ! empty( $cdn_urls ) ) {
+			return array_unique( $cdn_urls );
 		}
 
 		return false;
