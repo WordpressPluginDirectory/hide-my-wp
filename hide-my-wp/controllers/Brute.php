@@ -28,10 +28,8 @@ class HMWP_Controllers_Brute extends HMWP_Classes_FrontController {
 		parent::__construct();
 
 		// If the safe parameter is set, clear the banned IPs and let the default paths
-		if ( HMWP_Classes_Tools::getIsset( HMWP_Classes_Tools::getOption( 'hmwp_disable_name' ) ) ) {
-			if ( HMWP_Classes_Tools::getValue( HMWP_Classes_Tools::getOption( 'hmwp_disable_name' ) ) == HMWP_Classes_Tools::getOption( 'hmwp_disable' ) ) {
-				return;
-			}
+		if ( HMWP_Classes_Tools::calledSafeUrl( ) ) {
+			return;
 		}
 
 		// Load Brute Force for shortcodes
@@ -107,9 +105,11 @@ class HMWP_Controllers_Brute extends HMWP_Classes_FrontController {
 						HMWP_Classes_Error::setNotification( esc_html__( 'You need to set a positive waiting time.', 'hide-my-wp' ) );
 
 					}
-					HMWP_Classes_Tools::saveOptions( 'hmwp_brute_message', HMWP_Classes_Tools::getValue( 'hmwp_brute_message', '', true ) );
 					HMWP_Classes_Tools::saveOptions( 'brute_max_timeout', $timeout );
 				}
+
+				// Save the text every time to prevent from removing the white space from the text
+				HMWP_Classes_Tools::saveOptions( 'hmwp_brute_message', HMWP_Classes_Tools::getValue( 'hmwp_brute_message', '', true ) );
 
 				// Clear the cache if there are no errors
 				if ( ! HMWP_Classes_Tools::getOption( 'error' ) ) {

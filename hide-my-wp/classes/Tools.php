@@ -171,7 +171,7 @@ class HMWP_Classes_Tools {
 			'hmwp_bruteforce_comments'       => 0,
 			'hmwp_bruteforce_woocommerce'    => 0,
 			'hmwp_bruteforce_username'       => 0,
-			'hmwp_brute_message'             => esc_html__( 'Your IP has been flagged for potential security violations. Please try again in a little while.', 'hide-my-wp' ),
+			'hmwp_brute_message'             => 'Your IP has been flagged for potential security violations. Please try again in a little while.',
 			'hmwp_hide_classes'              => json_encode( array() ),
 			'trusted_ip_header'              => '',
 
@@ -333,6 +333,7 @@ class HMWP_Classes_Tools {
 			'hmwp_hide_plugins'              => 0,
 			'hmwp_hide_all_plugins'          => 0,
 			'hmwp_hide_themes'               => 0,
+			'hmwp_hide_all_themes'           => 0,
 			'hmwp_emulate_cms'               => '',
 
 			//--secure headers
@@ -365,10 +366,6 @@ class HMWP_Classes_Tools {
 				'bb-config.php',
 				'error_log'
 			),
-			//
-			'hmwp_category_base'             => '',
-			'hmwp_tag_base'                  => '',
-			//
 		);
 
 		// Set options for "Lite Mode".
@@ -400,8 +397,9 @@ class HMWP_Classes_Tools {
 			'hmwp_hide_newlogin'             => 1,
 			'hmwp_disable_language_switcher' => 0,
 			'hmwp_hide_plugins'              => 1,
-			'hmwp_hide_all_plugins'          => 0,
+			'hmwp_hide_all_plugins'          => ( self::isMultisites() ? 1 : 0 ),
 			'hmwp_hide_themes'               => 1,
+			'hmwp_hide_all_themes'           => ( self::isMultisites() ? 1 : 0 ),
 			'hmwp_emulate_cms'               => 'drupal11',
 			//
 			'hmwp_hide_img_classes'          => 1,
@@ -456,24 +454,15 @@ class HMWP_Classes_Tools {
 			$options['whitelist_level'] = ( $options['whitelist_paths'] == 1 ? 2 : 1 );
 		}
 
-		// Set the category and tag bases considering multisite setup.
-		$category_base = get_option( 'category_base' );
-		$tag_base      = get_option( 'tag_base' );
-
-		if ( self::isMultisites() && ! is_subdomain_install() && is_main_site() && 0 === strpos( get_option( 'permalink_structure' ), '/blog/' ) ) {
-			$category_base = preg_replace( '|^/?blog|', '', $category_base );
-			$tag_base      = preg_replace( '|^/?blog|', '', $tag_base );
-		}
-
-		$options['hmwp_category_base'] = $category_base;
-		$options['hmwp_tag_base']      = $tag_base;
-
 		// Set priority and rewrite rules settings if defined constants are set.
 		if ( HMW_PRIORITY ) {
 			$options['hmwp_priorityload'] = 1;
 		}
 		if ( HMW_RULES_IN_WP_RULES ) {
 			$options['hmwp_rewrites_in_wp_rules'] = 1;
+		}
+		if ( HMW_DYNAMIC_FILES ) {
+			$options['hmwp_mapping_file'] = 1;
 		}
 
 		// Return the final options array.
@@ -658,7 +647,15 @@ class HMWP_Classes_Tools {
 	 * @return void
 	 */
 	public static function loadMultilanguage() {
-		load_plugin_textdomain( dirname( HMWP_BASENAME ), false, dirname( HMWP_BASENAME ) . '/languages/' );
+
+		if ( function_exists('get_locale') ){
+			$locale = get_locale();
+
+			if ( $locale !== 'en_US' ) {
+				load_plugin_textdomain( dirname( HMWP_BASENAME ), false, dirname( HMWP_BASENAME ) . '/languages/' );
+			}
+		}
+
 	}
 
 	/**
@@ -707,6 +704,11 @@ class HMWP_Classes_Tools {
 	 */
 	public static function doFirewall() {
 
+		// If safe URL is called
+		if ( self::calledSafeUrl() ){
+			return false;
+		}
+
 		//If allways change paths admin & frontend
 		if ( defined( 'HMW_ALWAYS_RUN_FIREWALL' ) && HMW_ALWAYS_RUN_FIREWALL ) {
 			return true;
@@ -746,6 +748,11 @@ class HMWP_Classes_Tools {
 			return true;
 		}
 
+		// If safe URL is called
+		if ( self::calledSafeUrl() ){
+			return false;
+		}
+
 		if ( HMWP_Classes_Tools::isApi() ) {
 			return false;
 		}
@@ -772,6 +779,11 @@ class HMWP_Classes_Tools {
 
 		//Check if is valid for moving on
 		if ( ! apply_filters( 'hmwp_process_hide_disable', true ) ) {
+			return false;
+		}
+
+		// If safe URL is called
+		if ( self::calledSafeUrl() ){
 			return false;
 		}
 
@@ -807,6 +819,11 @@ class HMWP_Classes_Tools {
 			return false;
 		}
 
+		// If safe URL is called
+		if ( self::calledSafeUrl() ){
+			return false;
+		}
+
 		if ( self::isCron() ) {
 			return false;
 		}
@@ -836,6 +853,11 @@ class HMWP_Classes_Tools {
 			return false;
 		}
 
+		// If safe URL is called
+		if ( self::calledSafeUrl() ){
+			return false;
+		}
+
 		//make sure the function is loaded
 		if ( ! function_exists( 'is_user_logged_in' ) ) {
 			include_once ABSPATH . WPINC . '/pluggable.php';
@@ -852,6 +874,22 @@ class HMWP_Classes_Tools {
 		return true;
 	}
 
+	/**
+	 * Called the Safe URL
+	 *
+	 * @return bool
+	 */
+	public static function calledSafeUrl() {
+
+		// If safe parameter is set, clear the banned IPs and let the default paths
+		if ( HMWP_Classes_Tools::getIsset( HMWP_Classes_Tools::getOption( 'hmwp_disable_name' ) ) ) {
+			if ( HMWP_Classes_Tools::getValue( HMWP_Classes_Tools::getOption( 'hmwp_disable_name' ) ) == HMWP_Classes_Tools::getOption( 'hmwp_disable' ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	/**
 	 * Get the plugin settings URL
@@ -878,6 +916,66 @@ class HMWP_Classes_Tools {
 	}
 
 	/**
+	 * Get the absolute filesystem path to the config root of the WordPress installation
+	 *
+	 * @return string Full filesystem path to the root of the WordPress installation
+	 */
+	public static function getRootPath() {
+
+		// Get the absolute path by default
+		$root_path = str_replace( '\\', '/', ABSPATH );
+
+		if ( _HMWP_CONFIG_DIR_ ) {
+
+			// If it's defined by the user in wp-config.php
+			$root_path = str_replace( '\\', '/', _HMWP_CONFIG_DIR_ );
+
+		} elseif ( HMWP_Classes_Tools::isMultisites() ) {
+
+			// Fix the root path on Multisite
+			$document_root_fix = str_replace( '\\', '/', realpath( $_SERVER['DOCUMENT_ROOT'] ) );
+			$slashed_home      = trailingslashit( get_option( 'home' ) );
+			$base              = parse_url( $slashed_home, PHP_URL_PATH );
+			$root_path         = ('' === $document_root_fix || 0 === strpos( $root_path, $document_root_fix )) ? $document_root_fix . $base : get_home_path();
+
+		} elseif ( self::isFlywheel() && defined( 'WP_CONTENT_DIR' ) && dirname( WP_CONTENT_DIR ) ) {
+
+			// If is Flywheel server and the content dir is defined
+			$root_path = str_replace( '\\', '/', dirname( WP_CONTENT_DIR ) );
+
+		}
+
+		// Let third party to modify the config root path
+		return apply_filters( 'hmwp_root_path', trailingslashit( $root_path ) );
+
+	}
+
+	/**
+	 * Get the relative path to the home root of the WordPress installation
+	 *
+	 * @return string Full filesystem path to the root of the WordPress installation
+	 */
+	public static function getHomeRootPath() {
+		$home_root = '/';
+
+		// If it's multisite amd the main site path is defined
+		if ( HMWP_Classes_Tools::isMultisites() && defined( 'PATH_CURRENT_SITE' ) ) {
+			// Set the home root path as the main website
+			$path = PATH_CURRENT_SITE;
+		} else {
+			// Set the home root path from the site url
+			$path = wp_parse_url( site_url(), PHP_URL_PATH );
+		}
+
+		if ( $path ) {
+			// If there is a sub-path ...
+			$home_root = trailingslashit( $path );
+		}
+
+		return apply_filters( 'hmwp_home_root', $home_root );
+	}
+
+	/**
 	 * Get the config file for WordPress
 	 *
 	 * @return string
@@ -887,12 +985,22 @@ class HMWP_Classes_Tools {
 		//Initialize WordPress Filesystem
 		$wp_filesystem = HMWP_Classes_ObjController::initFilesystem();
 
-		if ( $wp_filesystem->exists( self::getRootPath() . 'wp-config.php' ) ) {
-			return self::getRootPath() . 'wp-config.php';
+		// Check config file in the root directory
+		if ( $wp_filesystem->exists( trailingslashit(self::getRootPath()) . 'wp-config.php' ) ) {
+			return trailingslashit(self::getRootPath()) . 'wp-config.php';
 		}
 
-		if ( $wp_filesystem->exists( dirname( ABSPATH ) . '/wp-config.php' ) ) {
-			return dirname( ABSPATH ) . '/wp-config.php';
+		// Get the absolute path by default
+		$abs_path = str_replace( '\\', '/', ABSPATH );
+
+		// Check config file in absolute path
+		if ( $wp_filesystem->exists( $abs_path . 'wp-config.php' ) ) {
+			return $abs_path . 'wp-config.php' ;
+		}
+
+		// Check config file in the parent path
+		if ( $wp_filesystem->exists( dirname( $abs_path ) . '/wp-config.php' ) ) {
+			return dirname( $abs_path ) . '/wp-config.php' ;
 		}
 
 		return false;
@@ -1327,6 +1435,10 @@ class HMWP_Classes_Tools {
 			return true;
 		}
 
+		if ( HMWP_Classes_Tools::isWpengine() ){
+			return false;
+		}
+
 		return ( $is_nginx || ( isset( $_SERVER['SERVER_SOFTWARE'] ) && ( stripos( $_SERVER['SERVER_SOFTWARE'], 'nginx' ) !== false || stripos( $_SERVER['SERVER_SOFTWARE'], 'TasteWP' ) !== false ) ) );
 	}
 
@@ -1336,17 +1448,18 @@ class HMWP_Classes_Tools {
 	 * @return boolean
 	 */
 	public static function isWpengine() {
-		//If custom defined
+
+		// Check if a custom-defined server type matches WPEngine
 		if ( HMWP_Classes_Tools::getOption( 'hmwp_server_type' ) <> 'auto' ) {
 			return ( HMWP_Classes_Tools::getOption( 'hmwp_server_type' ) == 'wpengine' );
 		}
 
-		//If custom defined
+		// Return true if the custom server type constant matches WPEngine
 		if ( defined( 'HMWP_SERVER_TYPE' ) && strtolower( HMWP_SERVER_TYPE ) == 'wpengine' ) {
 			return true;
 		}
 
-		return ( isset( $_SERVER['WPENGINE_PHPSESSIONS'] ) );
+		return ( isset( $_SERVER['IS_WPE'] ) || isset( $_SERVER['HTTP_X_WPE_SSL'] ) || isset( $_SERVER['HTTP_X_WPENGINE_PHP_VERSION'] ) );
 	}
 
 	/**
@@ -1573,6 +1686,7 @@ class HMWP_Classes_Tools {
 	 * @return array
 	 */
 	public static function getAllPlugins() {
+
 		// Check if the HMWP option to hide all plugins is enabled
 		if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_all_plugins' ) ) {
 			// Ensure the get_plugins() function is included before use
@@ -1581,24 +1695,24 @@ class HMWP_Classes_Tools {
 			}
 
 			// Retrieve all plugin file paths from WordPress
-			$all_plugins = array_keys( get_plugins() );
+			$plugins = array_keys( get_plugins() );
 		} else {
 			// Retrieve only the active plugins from WordPress options
-			$all_plugins = (array) get_option( 'active_plugins', array() );
+			$plugins = (array) get_option( 'active_plugins', array() );
 		}
 
 		// Check if WordPress is running as a multisite
 		if ( self::isMultisites() ) {
 			// Merge active plugins with any sitewide active plugins
-			$all_plugins = array_merge( array_values( $all_plugins ), array_keys( get_site_option( 'active_sitewide_plugins' ) ) );
+			$plugins = array_merge( array_values( $plugins ), array_keys( get_site_option( 'active_sitewide_plugins' ) ) );
 		}
 
 		// Remove duplicate entries from the plugins array
-		if ( ! empty( $all_plugins ) ) {
-			$all_plugins = array_unique( $all_plugins );
+		if ( ! empty( $plugins ) ) {
+			$plugins = array_unique( $plugins );
 		}
 
-		return $all_plugins;
+		return $plugins;
 	}
 
 	/**
@@ -1607,67 +1721,38 @@ class HMWP_Classes_Tools {
 	 * @return array
 	 */
 	public static function getAllThemes() {
-		return search_theme_directories();
-	}
 
-	/**
-	 * Get the absolute filesystem path to the config root of the WordPress installation
-	 *
-	 * @return string Full filesystem path to the root of the WordPress installation
-	 */
-	public static function getRootPath() {
-
-		// Get the absolute path by default
-		$root_path = str_replace( '\\', '/', ABSPATH );
-
-		if ( _HMWP_CONFIG_DIR_ ) {
-
-			// If it's defined by the user in wp-config.php
-			$root_path = str_replace( '\\', '/', _HMWP_CONFIG_DIR_ );
-
-		} elseif ( HMWP_Classes_Tools::isMultisites() ) {
-
-			// Check the abs root path in case of multisite
-			// If the config is not present in the absolute path, go back a level
-			if ( ! file_exists( ABSPATH . 'wp-config.php' ) && file_exists( dirname( ABSPATH ) . '/wp-config.php' ) ) {
-				$root_path = dirname( $root_path );
-			}
-
-		} elseif ( self::isFlywheel() && defined( 'WP_CONTENT_DIR' ) && dirname( WP_CONTENT_DIR ) ) {
-
-			// If is Flywheel server and the content dir is defined
-			$root_path = str_replace( '\\', '/', dirname( WP_CONTENT_DIR ) );
-
-		}
-
-		// Let third party to modify the config root path
-		return apply_filters( 'hmwp_root_path', trailingslashit( $root_path ) );
-
-	}
-
-	/**
-	 * Get the relative path to the home root of the WordPress installation
-	 *
-	 * @return string Full filesystem path to the root of the WordPress installation
-	 */
-	public static function getHomeRootPath() {
-		$home_root = '/';
-
-		// If it's multisite amd the main site path is defined
-		if ( HMWP_Classes_Tools::isMultisites() && defined( 'PATH_CURRENT_SITE' ) ) {
-			// Set the home root path as the main website
-			$path = PATH_CURRENT_SITE;
+		if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_all_themes' ) ) {
+			// Get the all network themes
+			$themes = search_theme_directories();
 		} else {
-			// Set the home root path from the site url
-			$path = wp_parse_url( site_url(), PHP_URL_PATH );
+
+			// Get only the active theme
+			$theme = wp_get_theme();
+
+			if ( $theme->exists() && $theme->get_stylesheet() <> '' ) {
+				$themes[ $theme->get_stylesheet() ] = array(
+					'theme_root' => $theme->get_theme_root()
+				);
+
+				// If it's a child theme, search and include also the parent
+				if( stripos( $theme->get_stylesheet(), '-child' ) !== false ) {
+					$parent_theme = str_ireplace( '-child', '', $theme->get_stylesheet() );
+					$all_themes = search_theme_directories();
+
+					if (!empty($all_themes)){
+						foreach ( $all_themes as $theme => $value ) {
+							if( stripos( $theme, $parent_theme ) !== false ) {
+								$themes[ $theme ] = $value;
+							}
+						}
+					}
+
+				}
+			}
 		}
 
-		if ( $path ) {
-			// If there is a sub-path ...
-			$home_root = trailingslashit( $path );
-		}
-
-		return apply_filters( 'hmwp_home_root', $home_root );
+		return $themes;
 	}
 
 	/**
@@ -1925,10 +2010,10 @@ class HMWP_Classes_Tools {
 		try {
 			//Check if tere are plugins added to website
 			if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_plugins' ) ) {
-				$all_plugins = HMWP_Classes_Tools::getAllPlugins();
+				$plugins = HMWP_Classes_Tools::getAllPlugins();
 				$dbplugins   = HMWP_Classes_Tools::getOption( 'hmwp_plugins' );
-				foreach ( $all_plugins as $plugin ) {
-					if ( function_exists( 'is_plugin_active' ) && is_plugin_active( $plugin ) && isset( $dbplugins['from'] ) && ! empty( $dbplugins['from'] ) ) {
+				foreach ( $plugins as $plugin ) {
+					if ( ! empty( $dbplugins['from'] ) ) {
 						if ( ! in_array( plugin_dir_path( $plugin ), $dbplugins['from'] ) ) {
 							HMWP_Classes_Tools::saveOptions( 'changes', true );
 						}
@@ -1938,14 +2023,10 @@ class HMWP_Classes_Tools {
 
 			//Check if there are themes added to website
 			if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_themes' ) ) {
-
-				//Initialize WordPress Filesystem
-				$wp_filesystem = HMWP_Classes_ObjController::initFilesystem();
-
-				$all_themes = HMWP_Classes_Tools::getAllThemes();
+				$themes = HMWP_Classes_Tools::getAllThemes();
 				$dbthemes   = HMWP_Classes_Tools::getOption( 'hmwp_themes' );
-				foreach ( $all_themes as $theme => $value ) {
-					if ( $wp_filesystem->is_dir( $value['theme_root'] ) && isset( $dbthemes['from'] ) && ! empty( $dbthemes['from'] ) ) {
+				foreach ( $themes as $theme => $value ) {
+					if ( ! empty( $dbthemes['from'] ) ) {
 						if ( ! in_array( $theme . '/', $dbthemes['from'] ) ) {
 							HMWP_Classes_Tools::saveOptions( 'changes', true );
 						}
@@ -1999,15 +2080,15 @@ class HMWP_Classes_Tools {
 	public static function checkAccountApi( $email = null, $redirect_to = '' ) {
 
 		$check   = array();
-		$monitor = HMWP_Classes_Tools::getValue( 'hmwp_monitor', 0 );
+		$howtolessons = HMWP_Classes_Tools::getValue( 'howtolessons', 1 );
 		$domain  = ( self::isMultisites() && defined( 'BLOG_ID_CURRENT_SITE' ) ) ? get_home_url( BLOG_ID_CURRENT_SITE ) : home_url();
 
 		if ( isset( $email ) && $email <> '' ) {
 			$args     = array(
 				'email'        => $email,
 				'url'          => $domain,
-				'howtolessons' => 1,
-				'monitor'      => (int) $monitor,
+				'howtolessons' => (int) $howtolessons,
+				'monitor'      => 0,
 				'source'       => 'hide-my-wp'
 			);
 			$response = HMWP_Classes_Tools::hmwp_remote_get( _HMWP_API_SITE_ . '/api/free/token', $args, array( 'timeout' => 10 ) );
@@ -2015,8 +2096,7 @@ class HMWP_Classes_Tools {
 			$args     = array(
 				'token'        => self::getOption( 'hmwp_token' ),
 				'url'          => $domain,
-				'howtolessons' => 1,
-				'monitor'      => (int) $monitor,
+				'howtolessons' => (int) $howtolessons,
 				'source'       => 'hide-my-wp'
 			);
 			$response = HMWP_Classes_Tools::hmwp_remote_get( _HMWP_API_SITE_ . '/api/free/token', $args, array( 'timeout' => 10 ) );

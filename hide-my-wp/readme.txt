@@ -2,9 +2,9 @@
 Contributors: johndarrel
 Tags: hide,security,firewall,login,wp admin
 Requires at least: 5.3
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 7.0
-Stable tag: 5.4.02
+Stable tag: 5.4.06
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -327,6 +327,32 @@ Enjoy!
 17. New custom core paths changed with Hide My WP Ghost
 
 == Changelog ==
+= 5.4.06 (21 Aug 2025) =
+* Update - Firewall rules for more compatibility
+* Update - Safe URL verification process
+* Update - Compatibility with the plugin Debloat
+
+= 5.4.05 (27 May 2025) =
+* Update - Add AI support in the plugin settings
+* Update - 7G & 8G Firewall for more compatibility with WP Plugins
+* Update - Compatibility with Riode theme on Brute Force
+* Fix - Compatibility WooCommerce login/register with reCaptcha V3
+* Fix - Update check error
+
+= 5.4.04 (21 Mar 2025) =
+* Update - Compatibility with the WP 6.8
+* Fixed - Function _load_textdomain_just_in_time was called incorrectly
+
+= 5.4.03 (11 Mar 2025) =
+* Update - Compatibility with the new WP Engine rewrite rules
+* Update - Add the option to customize all active and inactive themes
+* Fix - File security when the rewrite rules are not loaded correctly
+* Fix - Prevent Brute Force from updating the warning text without space when switched off
+* Fix - Prevent PHP warning when IP address unknown in Brute Force IP check
+* Fix - Load i18n on login page for password-strength-meter messages when the Clean Login option is activated
+* Fix - File security when the rewrite rules are not loaded correctly
+* Fix - Dynamic file mapping to load through index.php for better compatibility with all server types
+
 = 5.4.02 (04 Mar 2025) =
 * Update - Security update on wp-activate.php path call
 * Update - Translations in all languages for the last changes
