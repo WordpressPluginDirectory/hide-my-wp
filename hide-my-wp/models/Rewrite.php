@@ -509,6 +509,15 @@ class HMWP_Models_Rewrite {
 					'getInjectionRewrite'
 				) );
 
+				//HIDE OLD PATHS RULES
+				//If hmwp_hide_oldpaths do also the htaccess rewrite
+				if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_oldpaths' ) || HMWP_Classes_Tools::getOption( 'hmwp_hide_commonfiles' ) ) {
+					add_filter( 'hmwp_iis_hide_paths_rules', array(
+						HMWP_Classes_ObjController::getClass( 'HMWP_Models_Rules' ),
+						'getHideOldPathRewrite'
+					), 9 );
+				}
+
 				add_filter( 'iis7_url_rewrite_rules', array(
 					$this,
 					'getIISRules'
@@ -2877,6 +2886,24 @@ class HMWP_Models_Rewrite {
 	 */
 	public function replaceHeadersAndTags( $content ) {
 		$find = $replace = array();
+
+		// Remove the admin path and wp from the prefetch list
+		if ( strpos( $content, HMWP_Classes_Tools::getDefault( 'hmwp_admin_url' )  . '/*' ) !== false ||
+		     strpos( $content, HMWP_Classes_Tools::getDefault( 'hmwp_admin_url' )  . '\/*' ) !== false ) {
+
+			$find[]    = '#"[^"]*\/wp\-\*.php"\s*,\s*#i';
+			$replace[] = '';
+
+			$find[]    = '#"[^"]*\\\/wp\-\*.php"\s*,\s*#i';
+			$replace[] = '';
+
+			$find[]    = '#"[^"]*\/' . HMWP_Classes_Tools::getDefault( 'hmwp_admin_url' ) . '\/\*"\s*,\s*#i';
+			$replace[] = '';
+
+			$find[]    = '#"[^"]*\\\/' . HMWP_Classes_Tools::getDefault( 'hmwp_admin_url' ) . '\\\/\*"\s*,\s*#i';
+			$replace[] = '';
+
+		}
 
 		//Remove source comments
 		if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_comments' ) ) {

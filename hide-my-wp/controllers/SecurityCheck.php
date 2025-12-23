@@ -148,6 +148,7 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 			'checkLoginPath',
 			'checkOldPaths',
 			'checkCommonPaths',
+			'checkComments',
 			'checkVersionDisplayed',
 			'checkSSL',
 			'checkDBDebug',
@@ -204,7 +205,7 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 				'value'    => false,
 				'valid'    => false,
 				'warning'  => false,
-				'message'  => __( "Using an old version of PHP makes your site slow and prone to hacker attacks due to known vulnerabilities that exist in versions of PHP that are no longer maintained. <br /><br />You need <strong>PHP 7.4</strong> or higher for your website.", 'hide-my-wp' ),
+				'message'  => sprintf( __( "Using an old version of PHP makes your site slow and prone to hacker attacks due to known vulnerabilities that exist in versions of PHP that are no longer maintained. <br /><br />You need <strong>PHP %s</strong> or higher for your website.", 'hide-my-wp' ), '8.0'),
 				'solution' => esc_html__( "Email your hosting company and tell them you'd like to switch to a newer version of PHP or move your site to a better hosting company.", 'hide-my-wp' ),
 			),
 			'checkMysql'            => array(
@@ -366,7 +367,7 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 				'warning'    => false,
 				'message'    => __( "It's important to hide the common WordPress paths to prevent attacks on vulnerable plugins and themes. <br /> Also, it's important to hide the names of plugins and themes to make it impossible for bots to detect them.", 'hide-my-wp' ),
 				'solution'   => sprintf( esc_html__( "Switch on %s %s > Change Paths >  Hide WordPress Common Paths%s", 'hide-my-wp' ), '<a href="' . HMWP_Classes_Tools::getSettingsUrl( 'hmwp_permalinks#tab=core' ) . '" >', HMWP_Classes_Tools::getOption( 'hmwp_plugin_menu' ), '</a>' ),
-				'javascript' => "pro",
+				'javascript' => "jQuery(this).hmwp_fixSettings('hmwp_hide_oldpaths',1);",
 			),
 			'checkAdminPath'        => array(
 				'name'     => sprintf( esc_html__( "%s is visible in source code", 'hide-my-wp' ), '/' . HMWP_Classes_Tools::getOption( 'hmwp_admin_url' ) ),
@@ -407,8 +408,8 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 				'valid'      => false,
 				'warning'    => false,
 				'message'    => esc_html__( "It's important to hide or remove the readme.html file because it contains WP version details.", 'hide-my-wp' ),
-				'solution'   => sprintf( esc_html__( "Rename readme.html file or switch on %s %s > Change Paths > Hide WordPress Common Files%s", 'hide-my-wp' ), '<a href="' . HMWP_Classes_Tools::getSettingsUrl( 'hmwp_permalinks#tab=core' ) . '" >', HMWP_Classes_Tools::getOption( 'hmwp_plugin_menu' ), '</a>' ),
-				'javascript' => "pro",
+				'solution'   => sprintf( esc_html__( "Switch on %s > Change Paths > Hide WordPress Common Files and select readme.html from %s Hide WordPress Common Paths %s", 'hide-my-wp' ), HMWP_Classes_Tools::getOption( 'hmwp_plugin_menu' ), '<a href="' . HMWP_Classes_Tools::getSettingsUrl( 'hmwp_permalinks#tab=core' ) . '" >', '</a>' ),
+				'javascript' => "jQuery(this).hmwp_fixSettings('hmwp_hide_commonfiles',1);",
 			),
 			'checkInstall'          => array(
 				'name'       => esc_html__( "install.php & upgrade.php files are accessible", 'hide-my-wp' ),
@@ -416,8 +417,17 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 				'valid'      => false,
 				'warning'    => false,
 				'message'    => __( "WordPress is well-known for its ease of installation. <br/>It's important to hide the wp-admin/install.php and wp-admin/upgrade.php files because there have already been a couple of security issues regarding these files.", 'hide-my-wp' ),
-				'solution'   => sprintf( esc_html__( "Rename wp-admin/install.php & wp-admin/upgrade.php files or switch on %s %s > Change Paths > Hide WordPress Common Paths%s", 'hide-my-wp' ), '<a href="' . HMWP_Classes_Tools::getSettingsUrl( 'hmwp_permalinks#tab=core' ) . '" >', HMWP_Classes_Tools::getOption( 'hmwp_plugin_menu' ), '</a>' ),
+				'solution'   => sprintf( esc_html__( "Switch on %s > Change Paths > Hide WordPress Common Files and select install.php & upgrade.php from %s Hide WordPress Common Paths %s", 'hide-my-wp' ), HMWP_Classes_Tools::getOption( 'hmwp_plugin_menu' ), '<a href="' . HMWP_Classes_Tools::getSettingsUrl( 'hmwp_permalinks#tab=core' ) . '" >', '</a>' ),
 				'javascript' => "pro",
+			),
+			'checkComments'          => array(
+				'name'       => esc_html__( "wp-comments-post.php file is accessible", 'hide-my-wp' ),
+				'value'      => false,
+				'valid'      => false,
+				'warning'    => false,
+				'message'    => esc_html__( "It's important to change and hide the wp-comments-post.php file because it allows spammers to send spam comments.", 'hide-my-wp' ),
+				'solution'   => sprintf( esc_html__( "Switch on %s > Change Paths > Hide WordPress Common Files and select wp-comments-post.php from %s Hide WordPress Common Files %s", 'hide-my-wp' ), HMWP_Classes_Tools::getOption( 'hmwp_plugin_menu' ), '<a href="' . HMWP_Classes_Tools::getSettingsUrl( 'hmwp_permalinks#tab=core' ) . '" >', '</a>' ),
+				'javascript' => "jQuery(this).hmwp_fixSettings('hmwp_hide_commonfiles',1);",
 			),
 			'checkFirewall'         => array(
 				'name'       => esc_html__( "Firewall against injections is loaded", 'hide-my-wp' ),
@@ -485,7 +495,7 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 				'warning'    => false,
 				'message'    => esc_html__( "Allowing anyone to view all files in the Uploads folder with a browser will allow them to easily download all your uploaded files. It's a security and a copyright issue.", 'hide-my-wp' ),
 				'solution'   => sprintf( esc_html__( "Learn how to disable %sDirectory Browsing%s or switch on %s %s > Change Paths > Disable Directory Browsing%s", 'hide-my-wp' ), '<a href="https://www.netsparker.com/blog/web-security/disable-directory-listing-web-servers/">', '</a>', '<a href="' . HMWP_Classes_Tools::getSettingsUrl( 'hmwp_permalinks#tab=core' ) . '" >', HMWP_Classes_Tools::getOption( 'hmwp_plugin_menu' ), '</a>' ),
-				'javascript' => "pro",
+				'javascript' => "jQuery(this).hmwp_fixSettings('hmwp_disable_browsing',1);",
 			),
 			'checkWLW'              => array(
 				'name'       => esc_html__( "Windows Live Writer is on", 'hide-my-wp' ),
@@ -621,8 +631,13 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 				$url    = HMWP_Classes_ObjController::getClass( 'HMWP_Models_Rewrite' )->find_replace_url( $url );
 				$urls[] = $url;
 
-				$url    = home_url() . '/' . HMWP_Classes_Tools::getOption( 'hmwp_wp-json' );
-				$urls[] = $url;
+				if ( ! HMWP_Classes_Tools::isPHPPermalink() ) {
+					$url    = home_url() . '/' . HMWP_Classes_Tools::getOption( 'hmwp_wp-json' );
+					$urls[] = $url;
+				}else{
+					$url    = home_url() . '/index.php?rest_route=/';
+					$urls[] = $url;
+				}
 
 
 				foreach ( $urls as $url ) {
@@ -636,11 +651,7 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 						'cookies'     => false
 					) );
 
-					if ( ! is_wp_error( $response ) && in_array( wp_remote_retrieve_response_code( $response ), array(
-							404,
-							302,
-							301
-						) ) ) {
+					if ( ! is_wp_error( $response ) && in_array( wp_remote_retrieve_response_code( $response ), array( 404, 302, 301 ) ) ) {
 						$error[] = '<a href="' . $url . '" target="_blank" style="word-break: break-word;">' . str_replace( '?rnd=' . $rnd . '&hmwp_preview=1', '', $url ) . '</a> (' . wp_remote_retrieve_response_code( $response ) . ' ' . wp_remote_retrieve_response_message( $response ) . ')';
 					}
 				}
@@ -837,7 +848,7 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 
 		return array(
 			'value' => $phpversion,
-			'valid' => ( version_compare( $phpversion, '7.4', '>=' ) ),
+			'valid' => ( version_compare( $phpversion, '8.0', '>=' ) ),
 		);
 	}
 
@@ -1361,7 +1372,12 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 	 * @return array
 	 */
 	public function checkConfig() {
-		$url      = home_url( 'wp-config.php?rnd=' . rand() );
+
+		if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_commonfiles' ) ) {
+			return array( 'value' => esc_html__( 'No' ), 'valid' => true );
+		}
+
+		$url      = home_url( '?rnd=' . rand() );
 		$response = wp_remote_head( $url, array( 'redirection' => 0, 'timeout' => 5, 'cookies' => false ) );
 
 		$visible = false;
@@ -1392,6 +1408,11 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 	 * @return array
 	 */
 	public function checkReadme() {
+
+		if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_commonfiles' ) ) {
+			return array( 'value' => esc_html__( 'No' ), 'valid' => true );
+		}
+
 		$url      = home_url( 'readme.html?rnd=' . rand() );
 		$response = wp_remote_head( $url, array( 'timeout' => 5, 'cookies' => false ) );
 
@@ -1434,6 +1455,7 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 	 * @return array
 	 */
 	public function checkInstall() {
+
 		$url      = site_url() . '/wp-admin/install.php?rnd=' . rand();
 		$response = wp_remote_head( $url, array( 'timeout' => 10, 'cookies' => false ) );
 
@@ -1451,6 +1473,40 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 			'valid' => ( ! $visible ),
 		);
 	}
+
+	/**
+	 * Does WP wp-comments-post.php file exist?
+	 *
+	 * @return array
+	 */
+	public function checkComments() {
+
+		if ( HMWP_Classes_Tools::getOption( 'hmwp_hide_commonfiles' ) ) {
+			if(HMWP_Classes_Tools::getDefault('hmwp_wp-comments-post') <> HMWP_Classes_Tools::getOption('hmwp_wp-comments-post')) {
+				return array( 'value' => esc_html__( 'No' ), 'valid' => true );
+			}
+		}
+
+		$url      = site_url() . '/wp-comments-post.php?rnd=' . rand();
+		$response = wp_remote_head( $url, array( 'timeout' => 10, 'cookies' => false ) );
+
+
+		$visible = false;
+		if ( ! is_wp_error( $response ) ) {
+
+			if ( wp_remote_retrieve_response_code( $response ) == 200 ) {
+				$visible = true;
+			}
+
+		}
+
+		return array(
+			'value' => ( $visible ? esc_html__( 'Yes' ) : esc_html__( 'No' ) ),
+			'valid' => ( ! $visible ),
+		);
+	}
+
+
 
 	/**
 	 * Check if register_globals is off
@@ -1522,6 +1578,12 @@ class HMWP_Controllers_SecurityCheck extends HMWP_Classes_FrontController {
 	 * @return array
 	 */
 	public function checkUploadsBrowsable() {
+
+		//if the settings are already activated
+		if ( HMWP_Classes_Tools::getOption( 'hmwp_disable_browsing' ) ) {
+			return array( 'value' => esc_html__( 'No' ), 'valid' => true );
+		}
+
 		$upload_dir = wp_upload_dir();
 
 		$args     = array(

@@ -694,56 +694,102 @@
                                 </div>
                             </div>
 
-                            <div class="col-sm-12 row mb-1 ml-1 p-2 hmwp_pro">
-                                <div class="box">
-                                    <div class="ribbon"><span><?php echo esc_html__( 'PRO', 'hide-my-wp' ) ?></span>
-                                    </div>
-                                </div>
-                                <div class="checker col-sm-12 row my-2 py-1" style="opacity: 0.3" onclick="jQuery('#hmwp_ghost_mode_modal').modal('show')">
+                            <div class="col-sm-12 row mb-1 ml-1 p-2">
+                                <div class="checker col-sm-12 row my-2 py-0">
                                     <div class="col-sm-12 p-0 switch switch-sm">
                                         <input type="hidden" name="hmwp_hide_oldpaths" value="0"/>
-                                        <input type="checkbox" id="hmwp_hide_oldpaths" name="hmwp_hide_oldpaths" class="switch" <?php echo( HMWP_Classes_Tools::getOption( 'hmwp_hide_oldpaths' ) ? 'checked="checked"' : '' ) ?> value="1"/>
-                                        <label for="hmwp_hide_oldpaths"><?php echo esc_html__( 'Hide WordPress Common Paths', 'hide-my-wp' ); ?>
+                                        <input type="checkbox" id="hmwp_hide_oldpaths" name="hmwp_hide_oldpaths" class="switch" <?php echo(HMWP_Classes_Tools::getOption('hmwp_hide_oldpaths') ? 'checked="checked"' : '') ?> value="1"/>
+                                        <label for="hmwp_hide_oldpaths"><?php echo esc_html__('Hide WordPress Common Paths', 'hide-my-wp'); ?>
                                             <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/hide-wordpress-common-paths-and-files/#ghost-hide-wordpress-common-paths' ) ?>" target="_blank" class="d-inline ml-1"><i class="dashicons dashicons-editor-help d-inline"></i></a>
                                         </label>
-                                        <div class="text-black-50 ml-5"><?php echo esc_html__( 'Hide the old /wp-content, /wp-include paths once they are changed with the new ones', 'hide-my-wp' ); ?></div>
+                                        <div class="text-black-50 ml-5"><?php echo esc_html__('Hide the old /wp-content, /wp-include paths once they are changed with the new ones', 'hide-my-wp'); ?></div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="col-sm-12 row mb-1 ml-1 p-2 hmwp_pro">
+                            <div class="col-sm-12 row border-bottom border-light py-3 mx-1 my-3 hmwp_hide_oldpaths hmwp_pro">
                                 <div class="box">
                                     <div class="ribbon"><span><?php echo esc_html__( 'PRO', 'hide-my-wp' ) ?></span>
                                     </div>
                                 </div>
-                                <div class="checker col-sm-12 row my-2 py-1" style="opacity: 0.3" onclick="jQuery('#hmwp_ghost_mode_modal').modal('show')">
+                                <div class="col-sm-4 p-1" style="opacity: 0.3" onclick="jQuery('#hmwp_ghost_mode_modal').modal('show')">
+                                    <div class="font-weight-bold"><?php echo esc_html__('Hide File Extensions', 'hide-my-wp'); ?>:</div>
+                                    <div class="text-black-50 small"><?php echo esc_html__("Select the file extensions you want to hide on old paths", 'hide-my-wp'); ?></div>
+                                </div>
+                                <div class="col-sm-8 p-0 input-group"  onclick="jQuery('#hmwp_ghost_mode_modal').modal('show')">
+                                    <div class="col-sm-12 p-0 m-0">
+                                        <select multiple name="hmwp_hide_oldpaths_types[]" class="selectpicker form-control mb-1" disabled="disabled">
+                                            <?php
+                                            $alltypes = array('txt', 'html', 'lock');
+                                            $types = array('txt', 'html', 'lock');
+                                            foreach ( $alltypes as $key ) {
+                                                echo '<option value="' . esc_attr($key) . '" ' . (in_array($key, $types) ? 'selected="selected"' : '') . '>' .  esc_html(strtoupper($key) . ' ' .'files', 'hide-my-wp') . '</option>';
+                                            } ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-12 p-0 m-0 text-info small"><?php echo esc_html__("PRO: Hide and redirect additional asset paths (CSS/JS/PHP/media) for stronger stealth and broader bot protection.", 'hide-my-wp'); ?></div>
+                                </div>
+
+                            </div>
+
+                            <div class="col-sm-12 row mb-1 ml-1 p-2">
+                                <div class="checker col-sm-12 row my-2 py-0">
                                     <div class="col-sm-12 p-0 switch switch-sm ">
                                         <input type="hidden" name="hmwp_hide_commonfiles" value="0"/>
-                                        <input type="checkbox" id="hmwp_hide_commonfiles" name="hmwp_hide_commonfiles" class="switch" <?php echo( HMWP_Classes_Tools::getOption( 'hmwp_hide_commonfiles' ) ? 'checked="checked"' : '' ) ?> value="1"/>
-                                        <label for="hmwp_hide_commonfiles"><?php echo esc_html__( 'Hide WordPress Common Files', 'hide-my-wp' ); ?>
+                                        <input type="checkbox" id="hmwp_hide_commonfiles" name="hmwp_hide_commonfiles" class="switch" <?php echo(HMWP_Classes_Tools::getOption('hmwp_hide_commonfiles') ? 'checked="checked"' : '') ?> value="1"/>
+                                        <label for="hmwp_hide_commonfiles"><?php echo esc_html__('Hide WordPress Common Files', 'hide-my-wp'); ?>
                                             <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/hide-wordpress-common-paths-and-files/#ghost-hide-wordpress-common-files' ) ?>" target="_blank" class="d-inline ml-1"><i class="dashicons dashicons-editor-help d-inline"></i></a>
                                         </label>
-                                        <div class="text-black-50 ml-5"><?php echo esc_html__( 'Hide wp-config.php , wp-config-sample.php, readme.html, license.txt, upgrade.php and install.php files', 'hide-my-wp' ); ?></div>
+                                        <div class="text-black-50 ml-5"><?php echo esc_html__('Hide wp-config.php , wp-config-sample.php, readme.html, license.txt, upgrade.php and install.php files', 'hide-my-wp'); ?></div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12 row border-bottom border-light py-3 mx-1 my-3 hmwp_hide_commonfiles hmwp_pro">
+                                <div class="box">
+                                    <div class="ribbon"><span><?php echo esc_html__( 'PRO', 'hide-my-wp' ) ?></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 p-1" style="opacity: 0.3" onclick="jQuery('#hmwp_ghost_mode_modal').modal('show')">
+                                    <div class="font-weight-bold"><?php echo esc_html__('Hide Common Files', 'hide-my-wp'); ?>:</div>
+                                    <div class="text-black-50 small"><?php echo esc_html__("Select the files you want to hide on old paths", 'hide-my-wp'); ?></div>
+                                </div>
+                                <div class="col-sm-8 p-0 input-group" onclick="jQuery('#hmwp_ghost_mode_modal').modal('show')">
+                                    <div class="col-sm-12 p-0 m-0">
+                                        <select multiple name="hmwp_hide_commonfiles_files[]" class="selectpicker form-control mb-1" disabled="disabled">
+                                            <?php
+
+                                            $allfiles = array('wp-config.php', 'readme.html', 'readme.txt', 'license.txt');
+                                            $files = array('wp-config.php', 'readme.html', 'readme.txt', 'license.txt');
+
+                                            if(HMWP_Classes_Tools::getDefault('hmwp_wp-comments-post') <> HMWP_Classes_Tools::getOption('hmwp_wp-comments-post')) {
+                                                array_unshift($allfiles, 'wp-comments-post.php');
+                                                array_unshift($files, 'wp-comments-post.php');
+                                            }
+
+                                            foreach ( $allfiles as $key ) {
+                                                echo '<option value="' . esc_attr($key) . '" ' . (in_array($key, $files) ? 'selected="selected"' : '') . '>' . esc_html($key) . '</option>';
+                                            } ?>
+                                        </select>
+                                    </div>
+                                    <p class="col-sm-12 px-2 m-0 text-info small"><?php echo esc_html__("PRO: Protect additional sensitive files (install.php, update.php, wp-settings.php, and more) for higher security.", 'hide-my-wp'); ?></p>
+
                                 </div>
                             </div>
 
 							<?php if ( HMWP_Classes_Tools::isNginx() || HMWP_Classes_Tools::isApache() || HMWP_Classes_Tools::isLitespeed() ) { ?>
 
-                                <div class="col-sm-12 row mb-1 ml-1 p-2 hmwp_pro">
-                                    <div class="box">
-                                        <div class="ribbon"><span><?php echo esc_html__( 'PRO', 'hide-my-wp' ) ?></span>
-                                        </div>
-                                    </div>
-                                    <div class="checker col-sm-12 row my-2 py-1" style="opacity: 0.3" onclick="jQuery('#hmwp_ghost_mode_modal').modal('show')">
+                                <div class="col-sm-12 row mb-1 ml-1 p-2">
+                                    <div class="checker col-sm-12 row my-2 py-0">
                                         <div class="col-sm-12 p-0 switch switch-sm">
-											<?php $uploads = wp_upload_dir() ?>
+                                            <?php $uploads = wp_upload_dir() ?>
                                             <input type="hidden" name="hmwp_disable_browsing" value="0"/>
-                                            <input type="checkbox" id="hmwp_disable_browsing" name="hmwp_disable_browsing" class="switch"<?php echo( HMWP_Classes_Tools::getOption( 'hmwp_disable_browsing' ) ? 'checked="checked"' : '' ) ?> value="1"/>
-                                            <label for="hmwp_disable_browsing"><?php echo esc_html__( 'Disable Directory Browsing', 'hide-my-wp' ); ?>
+                                            <input type="checkbox" id="hmwp_disable_browsing" name="hmwp_disable_browsing" class="switch"<?php echo(HMWP_Classes_Tools::getOption('hmwp_disable_browsing') ? 'checked="checked"' : '') ?> value="1"/>
+                                            <label for="hmwp_disable_browsing"><?php echo esc_html__('Disable Directory Browsing', 'hide-my-wp'); ?>
                                                 <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/hide-wordpress-common-paths-and-files/#ghost-disable-directory-browsing' ) ?>" target="_blank" class="d-inline ml-1"><i class="dashicons dashicons-editor-help d-inline"></i></a>
                                             </label>
-                                            <div class="text-black-50 ml-5"><?php echo sprintf( esc_html__( "Don't let hackers see any directory content. See %sUploads Directory%s", 'hide-my-wp' ), '<a href="' . $uploads['baseurl'] . '" target="_blank">', '</a>' ); ?></div>
+                                            <div class="text-black-50 ml-5"><?php echo sprintf(esc_html__("Don't let hackers see any directory content. See %sUploads Directory%s", 'hide-my-wp'), '<a href="' . esc_url($uploads['baseurl']) . '" target="_blank">', '</a>'); ?></div>
+                                            <div class="text-danger my-2 ml-5"><?php echo sprintf(esc_html__("Normally, the option to block visitors from browsing server directories is activated by the host through server configuration, and activating it twice in the config file may cause errors, so it's best to first check if the %sUploads Directory%s is visible.", 'hide-my-wp'), '<a href="' . esc_url($uploads['baseurl']) . '" target="_blank">', '</a>'); ?></div>
                                         </div>
                                     </div>
                                 </div>
@@ -793,19 +839,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-sm-12 row mb-1 ml-1 p-2 hmwp_pro">
-                                <div class="box">
-                                    <div class="ribbon"><span><?php echo esc_html__( 'PRO', 'hide-my-wp' ) ?></span>
-                                    </div>
-                                </div>
-                                <div class="checker col-sm-12 row my-2 py-1" style="opacity: 0.3" onclick="jQuery('#hmwp_ghost_mode_modal').modal('show')">
+                            <div class="col-sm-12 row mb-1 ml-1 p-2">
+                                <div class="checker col-sm-12 row my-2 py-0">
                                     <div class="col-sm-12 p-0 switch switch-sm">
                                         <input type="hidden" name="hmwp_hide_oldpaths_plugins" value="0"/>
-                                        <input type="checkbox" id="hmwp_hide_oldpaths_plugins" name="hmwp_hide_oldpaths_plugins" class="switch" <?php echo( HMWP_Classes_Tools::getOption( 'hmwp_hide_oldpaths_plugins' ) ? 'checked="checked"' : '' ) ?> value="1"/>
-                                        <label for="hmwp_hide_oldpaths_plugins"><?php echo esc_html__( 'Hide WordPress Old Plugins Path', 'hide-my-wp' ); ?>
+                                        <input type="checkbox" id="hmwp_hide_oldpaths_plugins" name="hmwp_hide_oldpaths_plugins" class="switch" <?php echo(HMWP_Classes_Tools::getOption('hmwp_hide_oldpaths_plugins') ? 'checked="checked"' : '') ?> value="1"/>
+                                        <label for="hmwp_hide_oldpaths_plugins"><?php echo esc_html__('Hide WordPress Old Plugins Path', 'hide-my-wp'); ?>
                                             <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/change-plugins-path-with-wp-ghost/#ghost-hide-wordpress-old-plugins-path' ) ?>" target="_blank" class="d-inline ml-1"><i class="dashicons dashicons-editor-help d-inline"></i></a>
                                         </label>
-                                        <div class="text-black-50 ml-5"><?php echo esc_html__( "Hide the old /wp-content/plugins path once it's changed with the new one", 'hide-my-wp' ); ?></div>
+                                        <div class="text-black-50 ml-5"><?php echo esc_html__("Hide the old /wp-content/plugins path once it's changed with the new one", 'hide-my-wp'); ?></div>
                                     </div>
                                 </div>
                             </div>
@@ -874,19 +916,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-sm-12 row mb-1 ml-1 p-2 hmwp_pro">
-                                <div class="box">
-                                    <div class="ribbon"><span><?php echo esc_html__( 'PRO', 'hide-my-wp' ) ?></span>
-                                    </div>
-                                </div>
-                                <div class="checker col-sm-12 row my-2 py-1" style="opacity: 0.3" onclick="jQuery('#hmwp_ghost_mode_modal').modal('show')">
+                            <div class="col-sm-12 row mb-1 ml-1 p-2">
+                                <div class="checker col-sm-12 row my-2 py-0">
                                     <div class="col-sm-12 p-0 switch switch-sm">
                                         <input type="hidden" name="hmwp_hide_oldpaths_themes" value="0"/>
-                                        <input type="checkbox" id="hmwp_hide_oldpaths_themes" name="hmwp_hide_oldpaths_themes" class="switch" <?php echo( HMWP_Classes_Tools::getOption( 'hmwp_hide_oldpaths_themes' ) ? 'checked="checked"' : '' ) ?> value="1"/>
-                                        <label for="hmwp_hide_oldpaths_themes"><?php echo esc_html__( 'Hide WordPress Old Themes Path', 'hide-my-wp' ); ?>
+                                        <input type="checkbox" id="hmwp_hide_oldpaths_themes" name="hmwp_hide_oldpaths_themes" class="switch" <?php echo(HMWP_Classes_Tools::getOption('hmwp_hide_oldpaths_themes') ? 'checked="checked"' : '') ?> value="1"/>
+                                        <label for="hmwp_hide_oldpaths_themes"><?php echo esc_html__('Hide WordPress Old Themes Path', 'hide-my-wp'); ?>
                                             <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/change-themes-path-with-wp-ghost/#ghost-hide-wordpress-old-themes-path' ) ?>" target="_blank" class="d-inline ml-1"><i class="dashicons dashicons-editor-help d-inline"></i></a>
                                         </label>
-                                        <div class="text-black-50 ml-5"><?php echo esc_html__( "Hide the old /wp-content/themes path once it's changed with the new one", 'hide-my-wp' ); ?></div>
+                                        <div class="text-black-50 ml-5"><?php echo esc_html__("Hide the old /wp-content/themes path once it's changed with the new one", 'hide-my-wp'); ?></div>
                                     </div>
                                 </div>
                             </div>
@@ -934,19 +972,25 @@
                             <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/change-rest-api-path-with-wp-ghost/' ) ?>" target="_blank" class="d-inline-block float-right mr-2" style="color: white"><i class="dashicons dashicons-editor-help"></i></a>
                         </h3>
                         <div class="card-body">
-                            <div class="col-sm-12 row border-bottom border-light py-3 mx-0 my-3">
-                                <div class="col-sm-4 p-0 font-weight-bold">
-									<?php echo esc_html__( 'Custom wp-json Path', 'hide-my-wp' ); ?>:
-                                    <div class="small text-black-50"><?php echo esc_html__( 'eg. json, api, call', 'hide-my-wp' ); ?></div>
-                                </div>
-                                <div class="col-sm-8 p-0 input-group">
-                                    <input type="text" class="form-control" maxlength="32" name="hmwp_wp-json" value="<?php echo HMWP_Classes_Tools::getOption( 'hmwp_wp-json' ) ?>" placeholder="<?php echo HMWP_Classes_Tools::$default['hmwp_wp-json'] ?>"/>
-                                    <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/change-rest-api-path-with-wp-ghost/#ghost-change-the-wp-json-path' ) ?>" target="_blank" class="position-absolute float-right" style="right: 7px;top: 20%;"><i class="dashicons dashicons-editor-help"></i></a>
-                                </div>
+                            <?php if ( ! HMWP_Classes_Tools::isPHPPermalink() ) { ?>
+                                <div class="col-sm-12 row border-bottom border-light py-3 mx-0 my-3">
+                                    <div class="col-sm-4 p-0 font-weight-bold">
+                                        <?php echo esc_html__('Custom wp-json Path', 'hide-my-wp'); ?>:
+                                        <div class="small text-black-50"><?php echo esc_html__('eg. json, api, call', 'hide-my-wp'); ?></div>
+                                    </div>
+                                    <div class="col-sm-8 p-0 input-group">
+                                        <input type="text" class="form-control" maxlength="32" name="hmwp_wp-json" value="<?php echo esc_attr(HMWP_Classes_Tools::getOption('hmwp_wp-json')) ?>" placeholder="<?php echo esc_attr(HMWP_Classes_Tools::getDefault('hmwp_wp-json')) ?>"/>
+                                        <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/change-rest-api-path-with-wp-ghost/#ghost-change-the-wp-json-path' ) ?>" target="_blank" class="position-absolute float-right" style="right: 7px;top: 20%;"><i class="dashicons dashicons-editor-help"></i></a>
+                                    </div>
 
-                                <div class="col-sm-12 mt-2 p-2 alert-danger text-center"><?php echo sprintf( esc_html__( "Update the settings on %s to refresh the paths after changing REST API path.", 'hide-my-wp' ), '<a href="' . admin_url( 'options-permalink.php' ) . '">' . esc_html__( 'Settings' ) . ' > ' . esc_html__( 'Permalinks' ) . '</a>' ); ?></div>
+                                    <div class="col-sm-12 mt-2 p-2 alert-danger text-center"><?php echo sprintf(esc_html__("Update the settings on %s to refresh the paths after changing REST API path.", 'hide-my-wp'), '<a href="'.esc_url(admin_url('options-permalink.php')).'">'.esc_html__('Settings') . ' > ' . esc_html__('Permalinks').'</a>'); ?></div>
 
-                            </div>
+                                </div>
+                            <?php } else{ ?>
+                                <div class="col-sm-12 text-danger text-center p-0 my-3">
+                                    <?php echo esc_html__( 'To customize the REST API path, ou need to set the permalink structure to friendly URL (without index.php).', 'hide-my-wp' ); ?>
+                                </div>
+                            <?php } ?>
 
                             <div class="col-sm-12 row mb-1 ml-1 p-2">
                                 <div class="checker col-sm-12 row my-2 py-1">
@@ -961,20 +1005,22 @@
                                 </div>
                             </div>
 
-                            <div class="col-sm-12 row mb-1 ml-1 p-2">
-                                <div class="checker col-sm-12 row my-2 py-1">
-                                    <div class="col-sm-12 p-0 switch switch-sm">
-                                        <input type="hidden" name="hmwp_disable_rest_api" value="0"/>
-                                        <input type="checkbox" id="hmwp_disable_rest_api" name="hmwp_disable_rest_api" class="switch"<?php echo( HMWP_Classes_Tools::getOption( 'hmwp_disable_rest_api' ) ? 'checked="checked"' : '' ) ?> value="1"/>
-                                        <label for="hmwp_disable_rest_api"><?php echo esc_html__( 'Disable REST API Access', 'hide-my-wp' ); ?>
-                                            <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/change-rest-api-path-with-wp-ghost/#ghost-disable-rest-api-access' ) ?>" target="_blank" class="d-inline ml-1"><i class="dashicons dashicons-editor-help d-inline"></i></a>
-                                            <span class="text-black-50 small">(<?php echo esc_html__( "not recommended", 'hide-my-wp' ); ?>)</span>
-                                        </label>
-                                        <div class="text-black-50 ml-5"><?php echo esc_html__( "Disable REST API access for not logged in users", 'hide-my-wp' ); ?></div>
-                                        <div class="text-danger my-2 ml-5"><?php echo esc_html__( "The REST API is crucial for many plugins as it allows them to interact with the WordPress database and perform various actions programmatically.", 'hide-my-wp' ); ?></div>
+                            <?php if ( ! HMWP_Classes_Tools::isPHPPermalink() ) { ?>
+                                <div class="col-sm-12 row mb-1 ml-1 p-2">
+                                    <div class="checker col-sm-12 row my-2 py-1">
+                                        <div class="col-sm-12 p-0 switch switch-sm">
+                                            <input type="hidden" name="hmwp_disable_rest_api" value="0"/>
+                                            <input type="checkbox" id="hmwp_disable_rest_api" name="hmwp_disable_rest_api" class="switch"<?php echo( HMWP_Classes_Tools::getOption( 'hmwp_disable_rest_api' ) ? 'checked="checked"' : '' ) ?> value="1"/>
+                                            <label for="hmwp_disable_rest_api"><?php echo esc_html__( 'Disable REST API Access', 'hide-my-wp' ); ?>
+                                                <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/change-rest-api-path-with-wp-ghost/#ghost-disable-rest-api-access' ) ?>" target="_blank" class="d-inline ml-1"><i class="dashicons dashicons-editor-help d-inline"></i></a>
+                                                <span class="text-black-50 small">(<?php echo esc_html__( "not recommended", 'hide-my-wp' ); ?>)</span>
+                                            </label>
+                                            <div class="text-black-50 ml-5"><?php echo esc_html__( "Disable REST API access for not logged in users", 'hide-my-wp' ); ?></div>
+                                            <div class="text-danger my-2 ml-5"><?php echo esc_html__( "The REST API is crucial for many plugins as it allows them to interact with the WordPress database and perform various actions programmatically.", 'hide-my-wp' ); ?></div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            <?php }?>
 
                             <div class="col-sm-12 row mb-1 ml-1 p-2">
                                 <div class="checker col-sm-12 row my-2 py-1">
@@ -985,6 +1031,9 @@
                                             <a href="<?php echo esc_url( HMWP_Classes_Tools::getOption('hmwp_plugin_website') . '/kb/change-rest-api-path-with-wp-ghost/#ghost-disable-rest-route-parameter-access' ) ?>" target="_blank" class="d-inline ml-1"><i class="dashicons dashicons-editor-help d-inline"></i></a>
                                         </label>
                                         <div class="text-black-50 ml-5"><?php echo esc_html__( "Disable REST API access using the parameter 'rest_route'", 'hide-my-wp' ); ?></div>
+                                        <?php if ( HMWP_Classes_Tools::isPHPPermalink() ) { ?>
+                                            <div class="text-danger my-2 ml-5"><?php echo esc_html__("The REST API is crucial for many plugins as it allows them to interact with the WordPress database and perform various actions programmatically.", 'hide-my-wp'); ?></div>
+                                        <?php }?>
                                     </div>
                                 </div>
                             </div>
